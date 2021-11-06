@@ -7,11 +7,12 @@ class my_array {
 private:
     static const std::size_t _size = (N + 8 - 1) / 8;
     Cache* cache;
-public:
     CacheLine _data[_size];
+public:
 
     my_array() {
         static std::size_t k = 0;
+
         for (uint64_t i = 0; i < _size; ++i)
             _data[i].addrh = k * _size + i;
         
@@ -50,18 +51,30 @@ public:
     };
 
     double operator[](std::size_t index) const {
-        // std::size_t addrh = _data[index / 8].addrh;
-        // cache->get(addrh, index % 8);
+        int64_t addrh = _data[index / 8].addrh;
+
+        cache->get(addrh, index % 8, _data[index / 8]);
+
         return _data[index / 8].cl_data[index % 8];
     }
 
     double_ref operator[](std::size_t index) { 
+        cache->get(addrh, index % 8, _data[index / 8]);
+        
         return double_ref(_data, index);
     }
 
     void fill(double value) {
         for (std::size_t index = 0; index < N; ++index)
             (*this)[index] = value;
+    }
+
+    std::size_t size() {
+        return _size;
+    }
+
+    void set_cl(std::size_t index, CacheLine const& new_cl) {
+        _data[index] = new_cl;
     }
 
 };
