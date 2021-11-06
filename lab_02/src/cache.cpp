@@ -9,7 +9,7 @@ void Cache::lru(Unit<W>& unit, int n) {
 template<int W>
 int Cache::find_in_unit(Unit<W>& unit, std::size_t head) {
     for (uint32_t i = 0; i < unit.size(); ++i)
-        if (unit[i].addrh == head)
+        if ((std::size_t) unit[i].addrh == head && unit[i].addrh != -1)
             return i;
 
     return -1;
@@ -22,7 +22,7 @@ double& Cache::get(std::size_t addr) {
     std::size_t tail = addr & 0x7;
 
     Unit<4>& unit_l1 = L1[head % 512];
-
+    //
     int pos = find_in_unit<4>(unit_l1, head);
     if (pos != -1) {
         stats.l1h += 1;

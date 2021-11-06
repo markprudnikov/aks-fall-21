@@ -7,12 +7,15 @@ class my_array {
 private:
     static const std::size_t _size = (N + 8 - 1) / 8;
     Cache* cache;
-    CacheLine _data[_size];
 public:
-    my_array(int k) {
-        for (uint64_t i = 0; i < _size; ++i) {
-            _data[i].addrh = k * N + i;
-        }
+    CacheLine _data[_size];
+
+    my_array() {
+        static std::size_t k = 0;
+        for (uint64_t i = 0; i < _size; ++i)
+            _data[i].addrh = k * _size + i;
+        
+        k += 1;
     }
 
     class double_ref {

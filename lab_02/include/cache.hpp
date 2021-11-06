@@ -14,7 +14,7 @@ struct Stats {
 
 struct CacheLine { // cache->read(_data[i].addrh)
     bool modified = false;
-    std::size_t addrh;
+    int64_t addrh = -1;
     std::array<double, 8> cl_data;
 };
 
