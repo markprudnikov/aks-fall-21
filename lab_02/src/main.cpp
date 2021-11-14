@@ -35,12 +35,17 @@ void fill_arrays(double value) {
     zz.fill(value * 10.12);
 }
 
-int main() {
-    execute::f(2.3);
+int main(int argc, char** argv) {
 
-    std::cout << "L1: " << cache.stats.l1h << " hits from " << cache.stats.l1o << " asks -- " << std::setprecision(5) << (double) (cache.stats.l1h * 100.0 / cache.stats.l1o) << "%\n";
-    std::cout << "L2: " << cache.stats.l2h << " hits from " << cache.stats.l2o << " asks -- " << std::setprecision(5) << (double) (cache.stats.l2h * 100.0 / cache.stats.l2o) << "%\n";
-
+    if (argc < 2) {
+        std::cout << "Too few arguments\nExample: `./lab_02 3.14`\n";
+    } else if (argc > 2) {
+        std::cout << "Too much arguments\n";
+    } else {
+        execute::f(atof(argv[1]));
+        std::cout << "L1: " << cache.stats.l1h << " hits from " << cache.stats.l1o << " asks -- " << std::setprecision(5) << (double) (cache.stats.l1h * 100.0 / cache.stats.l1o) << "%\n";
+        std::cout << "L2: " << cache.stats.l2h << " hits from " << cache.stats.l2o << " asks -- " << std::setprecision(5) << (double) (cache.stats.l2h * 100.0 / cache.stats.l2o) << "%\n";
+    }
     free_memory();
 
     return 0;
