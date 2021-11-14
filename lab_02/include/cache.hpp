@@ -33,7 +33,6 @@ struct Cache {
     template<int W>
     static int find_in_unit(Unit<W>& unit, std::size_t head);
 
-    void get(int64_t addrh, CacheLine new_cl);
+    void modify(int64_t addrh, CacheLine new_cl);
 
-    void set(std::size_t addr, double val);
 };

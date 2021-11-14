@@ -1,7 +1,7 @@
 #include "cache.hpp"
 #include "my_array.hpp"
 
-const std::size_t size = 16;
+extern const std::size_t size = 1024 * 1024;
 extern my_array<size>& x;
 extern my_array<size>* RAM[6];
 
@@ -20,11 +20,8 @@ int Cache::find_in_unit(Unit<W>& unit, std::size_t head) {
     return -1;
 }
 
-void Cache::get(int64_t addrh, CacheLine new_cl) {
+void Cache::modify(int64_t addrh, CacheLine new_cl) {
     stats.l1o += 1;
-
-    // std::size_t head = addr >> 3;
-    // std::size_t tail = addr & 0x7;
 
     Unit<4>& unit_l1 = L1[addrh % 512];
     
@@ -34,7 +31,6 @@ void Cache::get(int64_t addrh, CacheLine new_cl) {
 
         lru<4>(unit_l1, pos);
 
-        // return unit_l1[0].cl_data[addrt];
         return;
     }
 
@@ -49,21 +45,17 @@ void Cache::get(int64_t addrh, CacheLine new_cl) {
         std::swap(unit_l2[0], unit_l1[3]);
         lru<4>(unit_l1, 3);
 
-        // return unit_l2[0].cl_data[addrt];
         return;
     }
 
-    // в кеше ничего не оказалось
-    // берём линию из оперативки и хуячим в L1, вытесненное из L1 в L2, вытесненное из L2 в оперативку
 
     std::swap(new_cl, unit_l1[3]);
-    // в new_cl вытесненное из L1
+
     lru<4>(unit_l1, 3);
 
     std::swap(new_cl, unit_l2[7]);
     lru<8>(unit_l2, 7);
 
-    // в new_cl вытесненное из L2
     if (!new_cl.modified)
         return;
         
@@ -74,12 +66,4 @@ void Cache::get(int64_t addrh, CacheLine new_cl) {
     std::size_t i = new_cl.addrh % x.size();
 
     RAM[k][i].set_cl(i, new_cl);
-}
-
-void Cache::set(std::size_t addr, double val) {
-    // double& value = get(addr); // юзаем ли то, что ретернули?
-    // value = val;
-    (void) addr;
-    (void) val;
-    // return this?
 }

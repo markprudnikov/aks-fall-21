@@ -53,14 +53,14 @@ public:
 
     double operator[](std::size_t index) const {
         int64_t addrh = _data[index / 8].addrh;
-        cache->get(addrh, _data[index / 8]);
+        cache->modify(addrh, _data[index / 8]);
 
         return _data[index / 8].cl_data[index % 8];
     }
 
     double_ref operator[](std::size_t index) { 
         int64_t addrh = _data[index / 8].addrh;
-        cache->get(addrh, _data[index / 8]); // <- тут
+        cache->modify(addrh, _data[index / 8]);
 
         return double_ref(_data, index);
     }
