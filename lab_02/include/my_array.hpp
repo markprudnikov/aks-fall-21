@@ -1,6 +1,7 @@
 #pragma once
 #include <cstddef>
 #include "cache.hpp"
+#include <iostream>
 
 template<std::size_t N>
 class my_array {
@@ -10,7 +11,7 @@ private:
     CacheLine _data[_size];
 public:
 
-    my_array() {
+    my_array(Cache* cp) : cache(cp) {
         static std::size_t k = 0;
 
         for (uint64_t i = 0; i < _size; ++i)
@@ -39,7 +40,7 @@ public:
         double_ref& operator=(double_ref const& new_value) {
             if (this == &new_value)
                 return *this;
-            
+
             *this = (double) new_value;
             return *this;
         }
@@ -52,21 +53,21 @@ public:
 
     double operator[](std::size_t index) const {
         int64_t addrh = _data[index / 8].addrh;
-
-        cache->get(addrh, index % 8, _data[index / 8]);
+        cache->get(addrh, _data[index / 8]);
 
         return _data[index / 8].cl_data[index % 8];
     }
 
     double_ref operator[](std::size_t index) { 
-        cache->get(addrh, index % 8, _data[index / 8]);
-        
+        int64_t addrh = _data[index / 8].addrh;
+        cache->get(addrh, _data[index / 8]); // <- тут
+
         return double_ref(_data, index);
     }
 
     void fill(double value) {
         for (std::size_t index = 0; index < N; ++index)
-            (*this)[index] = value;
+            _data[index / 8].cl_data[index % 8] = value;
     }
 
     std::size_t size() {

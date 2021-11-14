@@ -24,7 +24,6 @@ using Unit = std::array<CacheLine, W>;
 struct Cache {
     std::array<Unit<4>, 512> L1;
     std::array<Unit<8>, 2048> L2;
-    double ref = 5.00; // фиктивный элемент для get
     Stats stats;
 
 
