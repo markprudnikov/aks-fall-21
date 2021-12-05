@@ -1,8 +1,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
 #include "elf_parser.hpp"
-
-
+#include <iostream>
 
 TEST_CASE("Extract header from 32-bit elf") {
     std::ifstream file("hello_i386_32");
@@ -26,6 +25,49 @@ TEST_CASE("Extract header from 32-bit elf") {
     CHECK(elf_header.e_shnum == 4);
 
     CHECK(elf_header.e_shstrndx == 1);
+
+    file.close();
+}
+
+//TODO("Test extracting section headers")
+
+TEST_CASE("Extract header string table") {
+    std::ifstream file("hello_i386_32");
+
+    ElfHeader elf_header = elf_parsers::extract_elf_header(file);
+    file.seekg(elf_header.e_shoff);
+    SectionHeaderArray sh_array = elf_parsers::extract_section_header_array(file, elf_header.e_shentsize, elf_header.e_shnum);
+    CHECK(sh_array[0].sh_type == 0);
+    CHECK(sh_array[1].sh_type == 3);
+    CHECK(sh_array[2].sh_type == 1);
+    CHECK(sh_array[3].sh_type == 1);
+
+    Elf32_Off str_table_off = sh_array[elf_header.e_shstrndx].sh_offset;
+    CHECK(str_table_off == 0x00102e);
+    Elf32_Word str_table_size = sh_array[elf_header.e_shstrndx].sh_size;
+    CHECK(str_table_size == 0x000017);
+    file.seekg(str_table_off);
+
+    HeaderStringTable table = elf_parsers::extract_header_string_table(file, str_table_size);
+    std::string answer;
+    answer += '\0';
+    answer += ".shstrtab";
+    answer += '\0';
+    answer += ".text";
+    answer += '\0';
+    answer += ".data";
+    answer += '\0';
+    CHECK(answer.size() == table.size());
+    for (int i = 0; i < answer.size(); i++) {
+        std::cout << answer[i];
+    }
+    std::cout << std::endl;
+    for (int i = 0; i < table.size(); i++) {
+        std::cout << table[i];
+    }
+    std::cout << std::endl;
+    CHECK(!table.compare(answer));
+
 
     file.close();
 }

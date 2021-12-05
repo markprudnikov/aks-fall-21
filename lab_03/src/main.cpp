@@ -1,9 +1,10 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
+#include <cassert> // TODO("delete")
+#include <vector> 
+
 #include "elf_parser.hpp"
-#include <cassert>
-#include <vector>
 
 /**
  * Constraints for the project.
@@ -18,7 +19,6 @@
 */
 
 int main(int argc, char** argv) {
-    std::cout << "Hello World!" << std::endl;
 
     std::ifstream file(argv[1]);
 
