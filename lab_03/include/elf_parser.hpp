@@ -57,5 +57,5 @@ namespace elf_parsers {
 
     Elf32_Word find_section_index(HeaderStringTable& header_str_table, std::string section_name);
 
-    void extract_section_in_file(SectionHeader& section_header, std::ifstream& file, std::ofstream& output);
+    void extract_section_to_file(SectionHeader const& section_header, std::ifstream& file, std::ofstream& output);
 }

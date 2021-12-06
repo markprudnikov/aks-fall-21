@@ -11,11 +11,13 @@ ElfHeader elf_parsers::extract_elf_header(std::ifstream& file) {
 }
 
 SectionHeaderArray elf_parsers::extract_section_header_array(std::ifstream& file, Elf32_Off sh_off, Elf32_Half sh_size,  Elf32_Half sh_quantity) {
+    file.clear();
+    file.seekg(0);
     file.seekg(sh_off);
     SectionHeaderArray sh_array(sh_quantity);
 
     for (std::size_t i = 0; i < sh_quantity; ++i) {
-        char* p = reinterpret_cast<char *>(&(sh_array[i].sh_name));
+        char* p = reinterpret_cast<char *>(&(sh_array[i]));
         file.read(p, sh_size);
     }
 
@@ -44,7 +46,9 @@ Elf32_Word elf_parsers::find_section_index(HeaderStringTable& header_str_table, 
     return index;
 }
 
-void elf_parsers::extract_section_in_file(SectionHeader& section_header, std::ifstream& file, std::ofstream& output) {
+void elf_parsers::extract_section_to_file(SectionHeader const& section_header, std::ifstream& file, std::ofstream& output) {
+    file.clear();
+    file.seekg(0);
     file.seekg(section_header.sh_offset);
     char ch;
     
