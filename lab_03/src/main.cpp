@@ -1,8 +1,6 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
-#include <cassert> // TODO("delete")
-#include <vector> 
 
 #include "elf_parser.hpp"
 
@@ -24,9 +22,11 @@ int main(int argc, char** argv) {
 
     ElfHeader elf_header = elf_parsers::extract_elf_header(file);
 
-    file.seekg(elf_header.e_shoff);
+    Elf32_Off sh_off = elf_header.e_shoff;
+    Elf32_Half sh_size = elf_header.e_shentsize;
+    Elf32_Half sh_quantity = elf_header.e_shnum;
+    SectionHeaderArray sh_array = elf_parsers::extract_section_header_array(file, sh_off, sh_size, sh_quantity);
 
-    SectionHeaderArray sh_array = elf_parsers::extract_section_header_array(file, elf_header.e_shentsize, elf_header.e_shnum);
     Elf32_Off str_table_off = sh_array[elf_header.e_shstrndx].sh_offset;
     Elf32_Word str_table_size = sh_array[elf_header.e_shstrndx].sh_size;
 

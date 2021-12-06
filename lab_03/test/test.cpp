@@ -35,8 +35,8 @@ TEST_CASE("Extract header string table") {
     std::ifstream file("hello_i386_32");
 
     ElfHeader elf_header = elf_parsers::extract_elf_header(file);
-    file.seekg(elf_header.e_shoff);
-    SectionHeaderArray sh_array = elf_parsers::extract_section_header_array(file, elf_header.e_shentsize, elf_header.e_shnum);
+    SectionHeaderArray sh_array = elf_parsers::extract_section_header_array(file, elf_header.e_shoff, elf_header.e_shentsize, elf_header.e_shnum);
+    
     CHECK(sh_array[0].sh_type == 0);
     CHECK(sh_array[1].sh_type == 3);
     CHECK(sh_array[2].sh_type == 1);

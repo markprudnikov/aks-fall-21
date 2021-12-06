@@ -51,7 +51,7 @@ namespace elf_parsers {
 
     ElfHeader extract_elf_header(std::ifstream& file);
 
-    SectionHeaderArray extract_section_header_array(std::ifstream& file, Elf32_Half sh_size, Elf32_Half sh_quantity);
+    SectionHeaderArray extract_section_header_array(std::ifstream& file, Elf32_Off sh_off, Elf32_Half sh_size, Elf32_Half sh_quantity);
 
     HeaderStringTable extract_header_string_table(std::ifstream& file, Elf32_Word size);
 

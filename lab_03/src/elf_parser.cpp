@@ -10,7 +10,8 @@ ElfHeader elf_parsers::extract_elf_header(std::ifstream& file) {
     return elf_header;
 }
 
-SectionHeaderArray elf_parsers::extract_section_header_array(std::ifstream& file, Elf32_Half sh_size,  Elf32_Half sh_quantity) {
+SectionHeaderArray elf_parsers::extract_section_header_array(std::ifstream& file, Elf32_Off sh_off, Elf32_Half sh_size,  Elf32_Half sh_quantity) {
+    file.seekg(sh_off);
     SectionHeaderArray sh_array(sh_quantity);
 
     for (std::size_t i = 0; i < sh_quantity; ++i) {
