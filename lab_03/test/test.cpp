@@ -1,5 +1,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
+#include "elf.hpp"
 #include "elf_parser.hpp"
 #include <iostream>
 

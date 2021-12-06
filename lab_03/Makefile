@@ -9,16 +9,16 @@ lab_03: obj/elf_parser.o obj/main.o
 testing: obj/test.o obj/elf_parser.o
 	$(CXX) obj/test.o obj/elf_parser.o -o testing
 
-obj/test.o: test/test.cpp include/doctest.h include/elf_parser.hpp | obj
+obj/test.o: test/test.cpp include/doctest.h include/elf.hpp include/elf_parser.hpp | obj
 	$(CXX) $(CFLAGS) test/test.cpp -o obj/test.o
 
 obj:
 	mkdir obj
 
-obj/elf_parser.o: src/elf_parser.cpp include/elf_parser.hpp | obj
+obj/elf_parser.o: src/elf_parser.cpp include/elf_parser.hpp include/elf.hpp | obj
 	$(CXX) $(CFLAGS) src/elf_parser.cpp -o obj/elf_parser.o
 
-obj/main.o: src/main.cpp include/elf_parser.hpp | obj
+obj/main.o: src/main.cpp include/elf_parser.hpp include/elf.hpp | obj
 	$(CXX) $(CFLAGS) src/main.cpp -o obj/main.o
 
 .PHONY: clean
