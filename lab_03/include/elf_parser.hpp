@@ -1,7 +1,8 @@
 #pragma once
-#include <cstdint>
-#include <string>
+
+#include <fstream>
 #include <vector>
+#include <string>
 
 #include "elf.hpp"
 
@@ -20,5 +21,5 @@ namespace elf_parsers {
 
     void extract_section_to_file(SectionHeader const& section_header, std::ifstream& file, std::ofstream& output);
     
-
+    std::vector<SymbolTable> extract_symbol_table(SectionHeader const& symtab, std::ifstream& file);
 }

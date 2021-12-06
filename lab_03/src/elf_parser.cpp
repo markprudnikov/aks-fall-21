@@ -48,7 +48,7 @@ Elf32_Word elf_parsers::find_section_index(HeaderStringTable& header_str_table, 
         if (!strcmp(p, section_name))
             return index;
     }
-    
+
     return index; 
 }
 
@@ -63,4 +63,16 @@ void elf_parsers::extract_section_to_file(SectionHeader const& section_header, s
         output.write(&ch , sizeof(ch));
     }
     
+}
+
+std::vector<SymbolTable> elf_parsers::extract_symbol_table(SectionHeader const& symtab, std::ifstream& file) {
+    file.seekg(symtab.sh_offset);
+    std::vector<SymbolTable> st_array(symtab.sh_size / symtab.sh_entsize);
+    char* p;
+    for (int i = 0; i < st_array.size(); i++) {
+        p = reinterpret_cast<char *> (&st_array[i]);
+        file.read(p, sizeof(st_array[i]));
+    }
+    
+    return st_array;
 }
