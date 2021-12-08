@@ -42,7 +42,7 @@ struct SectionHeader {
     Elf32_Word	sh_entsize;
 };
 
-struct SymbolTable {
+struct Symbol {
     Elf32_Word      st_name;
     Elf32_Addr      st_value;
     Elf32_Word      st_size;

@@ -1,13 +1,17 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+
+#include <iostream>
+
 #include "doctest.h"
 #include "elf.hpp"
 #include "elf_parser.hpp"
-#include <iostream>
+#include "writer.hpp"
+#include "symtab.hpp"
 
 TEST_CASE("Extract header from 32-bit elf") {
     std::ifstream file("hello_i386_32");
 
-    ElfHeader elf_header = elf_parsers::extract_elf_header(file);
+    ElfHeader elf_header = extractElfHeader(file);
     CHECK(elf_header.e_ident[0] == 127);
     CHECK(elf_header.e_ident[1] == 'E');
     CHECK(elf_header.e_ident[2] == 'L');
@@ -35,8 +39,8 @@ TEST_CASE("Extract header from 32-bit elf") {
 TEST_CASE("Extract header string table") {
     std::ifstream file("hello_i386_32");
 
-    ElfHeader elf_header = elf_parsers::extract_elf_header(file);
-    SectionHeaderArray sh_array = elf_parsers::extract_section_header_array(file, elf_header.e_shoff, elf_header.e_shentsize, elf_header.e_shnum);
+    ElfHeader elf_header = extractElfHeader(file);
+    SectionHeaderArray sh_array = extractSectionHeaderArray(file, elf_header);
     
     CHECK(sh_array[0].sh_type == 0);
     CHECK(sh_array[1].sh_type == 3);
@@ -48,7 +52,7 @@ TEST_CASE("Extract header string table") {
     Elf32_Word str_table_size = sh_array[elf_header.e_shstrndx].sh_size;
     CHECK(str_table_size == 0x000017);
 
-    HeaderStringTable table = elf_parsers::extract_header_string_table(file, str_table_off, str_table_size);
+    HeaderStringTable table = getHeaderStringTable(file, sh_array, elf_header.e_shstrndx);
     std::string answer;
     answer += '\0';
     answer += ".shstrtab";
@@ -58,14 +62,6 @@ TEST_CASE("Extract header string table") {
     answer += ".data";
     answer += '\0';
     CHECK(answer.size() == table.size());
-    for (int i = 0; i < answer.size(); i++) {
-        std::cout << answer[i];
-    }
-    std::cout << std::endl;
-    for (int i = 0; i < table.size(); i++) {
-        std::cout << table[i];
-    }
-    std::cout << std::endl;
     CHECK(!table.compare(answer));
 
 
@@ -75,23 +71,11 @@ TEST_CASE("Extract header string table") {
 TEST_CASE("Get symbol table") {
     std::ifstream file("test_elf.o");   
 
-    ElfHeader elf_header = elf_parsers::extract_elf_header(file);
-    Elf32_Half str_table_index = elf_header.e_shstrndx;
-    Elf32_Off sh_offset = elf_header.e_shoff;
-    Elf32_Half sh_size = elf_header.e_shentsize;
-    Elf32_Half sh_quantity = elf_header.e_shnum;
-
-    SectionHeaderArray sh_array = elf_parsers::extract_section_header_array(file, sh_offset, sh_size, sh_quantity);
-    Elf32_Off str_table_off = sh_array[str_table_index].sh_offset;
-    Elf32_Word str_table_size = sh_array[str_table_index].sh_size;
-
-    HeaderStringTable header_str_table = elf_parsers::extract_header_string_table(file, str_table_off, str_table_size);
+    ElfHeader elf_header = extractElfHeader(file);
+    SectionHeaderArray sh_array = extractSectionHeaderArray(file, elf_header);
+    HeaderStringTable header_str_table = getHeaderStringTable(file, sh_array, elf_header.e_shstrndx);
     
-    Elf32_Word symtab_index = elf_parsers::find_section_index(header_str_table, sh_array, ".symtab");
-
-    SectionHeader symtab = sh_array[symtab_index];
-    
-    std::vector<SymbolTable> st_array = elf_parsers::extract_symbol_table(symtab, file);
+    SymbolTable st_array = extractSymbolTable(file, header_str_table, sh_array);
 
     SUBCASE("Check Sizes") {
         CHECK(st_array[0].st_size == 0);

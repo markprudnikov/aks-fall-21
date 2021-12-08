@@ -6,20 +6,33 @@
 
 #include "elf.hpp"
 
-using SectionHeaderArray = std::vector<SectionHeader>;
-using HeaderStringTable = std::string;
+#define TEXT_SECTION ".text"
+#define SYMTAB_SECTION ".symtab"
+
+typedef std::vector<SectionHeader> SectionHeaderArray;
+typedef std::string HeaderStringTable ;
+typedef std::vector<Symbol> SymbolTable;
+typedef std::vector<unsigned char> TextSection;
+
+void disassemble(std::ifstream& src, std::ofstream& dst, ElfHeader const& elf_header);
+
+ElfHeader extractElfHeader(std::ifstream& file);
+
+SectionHeaderArray extractSectionHeaderArray(std::ifstream& file, const ElfHeader& elf_header);
+
+HeaderStringTable getHeaderStringTable(std::ifstream& file, SectionHeaderArray& sh_array, Elf32_Half hst_index);
+
+TextSection extractTextSection(std::ifstream& file, HeaderStringTable const& hdr_str_table, SectionHeaderArray& sh_array);
+
+SymbolTable extractSymbolTable(std::ifstream& file, HeaderStringTable const& hdr_str_table, SectionHeaderArray& sh_array);
 
 namespace elf_parsers {
     
-    ElfHeader extract_elf_header(std::ifstream& file);
+    SectionHeader getSectionHeader(SectionHeaderArray& sh_array, HeaderStringTable const& hdr_str_table);
 
-    SectionHeaderArray extract_section_header_array(std::ifstream& file, Elf32_Off sh_off, Elf32_Half sh_size, Elf32_Half sh_quantity);
+    Elf32_Word getSectionIndex(HeaderStringTable const& header_str_table, SectionHeaderArray& sh_array, const char* section_name);
 
-    HeaderStringTable extract_header_string_table(std::ifstream& file, Elf32_Off str_table_off, Elf32_Word size);
+    void set_offset(std::ifstream& file, Elf32_Off offset);
 
-    Elf32_Word find_section_index(HeaderStringTable& header_str_table, SectionHeaderArray& sh_array, const char* section_name);
-
-    void extract_section_to_file(SectionHeader const& section_header, std::ifstream& file, std::ofstream& output);
-    
-    std::vector<SymbolTable> extract_symbol_table(SectionHeader const& symtab, std::ifstream& file);
+    // void extract_section_to_file(SectionHeader const& section_header, std::ifstream& file, std::ofstream& output);
 }
