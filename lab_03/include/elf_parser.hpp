@@ -9,10 +9,12 @@
 #define TEXT_SECTION ".text"
 #define SYMTAB_SECTION ".symtab"
 
-typedef std::vector<SectionHeader> SectionHeaderArray;
-typedef std::string HeaderStringTable ;
-typedef std::vector<Symbol> SymbolTable;
-typedef std::vector<unsigned char> TextSection;
+
+using SectionHeaderArray = std::vector<SectionHeader>;
+using HeaderStringTable = std::string;
+using SymbolTable = std::vector<Symbol>;
+using Parcel = uint16_t;
+using TextSection = std::vector<Parcel>;
 
 void disassemble(std::ifstream& src, std::ofstream& dst, ElfHeader const& elf_header);
 

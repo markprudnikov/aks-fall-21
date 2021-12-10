@@ -1,11 +1,12 @@
 #include "writer.hpp"
 #include "symtab.hpp"
 
-void writeTextSection(std::ofstream& file, TextSection& text_sec, const char* str_tab) {
+#include <iostream>
+
+void writeTextSection(std::ofstream& file, TextSection& text_sec) {
     (void) text_sec;
-    (void) str_tab;
-    // TODO: parse and write
-    file.write("\n", 1);
+    //TODO("Parse and write")
+    file << "\n";
 }
 
 void writeSymbolTable(std::ofstream& file, SymbolTable& sym_tab, const char* str_tab) {
@@ -34,13 +35,13 @@ void writer_impl::writeHeader(std::ofstream& file) {
     file << str;
 }
 
-void writer_impl::writeSymbol(std::ofstream& file, Symbol& symbol, const char* str_tab, int index) {
+void writer_impl::writeSymbol(std::ofstream& file, Symbol& symbol, const char* str_tab, std::size_t index) {
     char str[LINE_SZ];
 
     sprintf(
         str,
         SYMBOL_FORMAT,
-        index,
+        static_cast<int>(index),
         symbol.st_value,
         symbol.st_size,
         SymTab::Getters::get_type(symbol.st_info),

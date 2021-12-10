@@ -1,28 +1,11 @@
 #include <iostream>
-#include <fstream>
-#include <cstring>
-#include <unordered_map>
 #include <map>
 
 #include "elf.hpp"
 #include "elf_parser.hpp"
-#include "symtab.hpp"
-#include "writer.hpp"
 
 // objdump -s -j .text test_elf.o
 // readelf -x .text test_elf.o
-
-/**
- * Constraints for the project.
- *
- * e_ident[0] == 127 (Const)
- * e_ident[1] == 'E'
- * e_ident[2] == 'L'
- * e_ident[3] == 'F'
- * e_ident[4] == 1 (32 bit ELF file)
- * e_ident[5] == 1 (LSB little endian)
- * e_machine == 0xF3 (RISC-V)
-*/
 
 void check_arguments(int argc, char** argv, std::ifstream& input, std::ofstream& output) {
     if (argc < 3) {
@@ -44,7 +27,7 @@ void check_arguments(int argc, char** argv, std::ifstream& input, std::ofstream&
 
 void check_input_file(ElfHeader const& elf_header) {
     char check_sum = 0;
-    
+
     if (elf_header.e_ident[0] == 0xF)
         check_sum++;
     else if (elf_header.e_ident[1] == 'E')

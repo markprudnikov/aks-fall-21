@@ -1,21 +1,21 @@
-#include <fstream>
 #include <iostream>
 #include <cstring>
+#include <cassert>
 
 #include "elf.hpp"
 #include "elf_parser.hpp"
 #include "writer.hpp"
 
 ElfHeader extractElfHeader(std::ifstream& file) {
-    ElfHeader elf_header;
-    
+    ElfHeader elf_header{};
+
     char* p = reinterpret_cast<char*>(&elf_header);
     file.read(p, sizeof(elf_header));
 
     return elf_header;
 }
 
-// вынести в отдельный файл дизасма
+// TODO("to another disassembler file")
 void disassemble(std::ifstream& src, std::ofstream& dst, const ElfHeader& elf_header) {
     SectionHeaderArray sh_array = extractSectionHeaderArray(src, elf_header);
 
@@ -24,19 +24,19 @@ void disassemble(std::ifstream& src, std::ofstream& dst, const ElfHeader& elf_he
     TextSection text_section = extractTextSection(src, header_str_table, sh_array);
     SymbolTable symbol_table = extractSymbolTable(src, header_str_table, sh_array);
 
-    writeTextSection(dst, text_section, header_str_table.c_str());
+    writeTextSection(dst, text_section);
     writeSymbolTable(dst, symbol_table, header_str_table.c_str());
 }
 
 SectionHeaderArray extractSectionHeaderArray(std::ifstream& file, const ElfHeader& elf_header) {
-    Elf32_Half sh_num =  elf_header.e_shnum;
+    Elf32_Half sh_num = elf_header.e_shnum;
     Elf32_Half sh_size = elf_header.e_shentsize;
     SectionHeaderArray sh_array(sh_num);
 
     elf_parsers::set_offset(file, elf_header.e_shoff);
 
     for (std::size_t i = 0; i < sh_num; ++i) {
-        char* p = reinterpret_cast<char *>(&(sh_array[i]));
+        char* p = reinterpret_cast<char*>(&(sh_array[i]));
         file.read(p, sh_size);
     }
 
@@ -61,18 +61,24 @@ HeaderStringTable getHeaderStringTable(std::ifstream& file, SectionHeaderArray& 
 }
 
 TextSection extractTextSection(std::ifstream& file, HeaderStringTable const& hdr_str_table, SectionHeaderArray& sh_array) {
-    TextSection text_section = TextSection();
-    (void) file;
-    (void) hdr_str_table;
-    (void) sh_array;
+    SectionHeader text_sec_header = elf_parsers::getSectionHeader(sh_array, hdr_str_table);
 
-    // TODO("get vector of bytes from .text section")
+    Elf32_Word size = text_sec_header.sh_size / 2;
+    TextSection text_section(size);
+    char* p;
 
-    text_section.shrink_to_fit();
+    elf_parsers::set_offset(file, text_sec_header.sh_offset);
+
+    for (std::size_t i = 0; i < size; ++i) {
+        p = reinterpret_cast<char*> (&text_section[i]);
+        file.read(p, sizeof(text_section[i]));
+    }
+
     return text_section;
 }
 
-SymbolTable extractSymbolTable(std::ifstream& file, HeaderStringTable const& hdr_str_table, SectionHeaderArray& sh_array) {
+SymbolTable
+extractSymbolTable(std::ifstream& file, HeaderStringTable const& hdr_str_table, SectionHeaderArray& sh_array) {
     SectionHeader sym_tab_header = elf_parsers::getSectionHeader(sh_array, hdr_str_table);
 
     Elf32_Word size = sym_tab_header.sh_size / sym_tab_header.sh_entsize;
@@ -80,12 +86,12 @@ SymbolTable extractSymbolTable(std::ifstream& file, HeaderStringTable const& hdr
     char* p;
 
     elf_parsers::set_offset(file, sym_tab_header.sh_offset);
-    
+
     for (std::size_t i = 0; i < size; ++i) {
-        p = reinterpret_cast<char *> (&symbol_table[i]);
+        p = reinterpret_cast<char*> (&symbol_table[i]);
         file.read(p, sizeof(symbol_table[i]));
     }
-    
+
     return symbol_table;
 }
 
@@ -94,18 +100,19 @@ SectionHeader elf_parsers::getSectionHeader(SectionHeaderArray& sh_array, Header
     return sh_array[symtab_index];
 }
 
-Elf32_Word elf_parsers::getSectionIndex(HeaderStringTable const& header_str_table, SectionHeaderArray& sh_array, const char* section_name) {
+Elf32_Word elf_parsers::getSectionIndex(HeaderStringTable const& header_str_table, SectionHeaderArray& sh_array,
+                                        const char* section_name) {
     Elf32_Word index = 0;
 
-    for ( ; index < sh_array.size(); ++index) {
-        const char * p = header_str_table.c_str();    
-        p += sh_array[index].sh_name; 
+    for (; index < sh_array.size(); ++index) {
+        const char* p = header_str_table.c_str();
+        p += sh_array[index].sh_name;
 
         if (!strcmp(p, section_name))
             return index;
     }
 
-    return index; 
+    return index;
 }
 
 void elf_parsers::set_offset(std::ifstream& file, Elf32_Off offset) {
