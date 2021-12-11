@@ -30,7 +30,7 @@ SymbolTable extractSymbolTable(std::ifstream& file, HeaderStringTable const& hdr
 
 namespace elf_parsers {
     
-    SectionHeader getSectionHeader(SectionHeaderArray& sh_array, HeaderStringTable const& hdr_str_table);
+    SectionHeader getSectionHeader(SectionHeaderArray& sh_array, HeaderStringTable const& hdr_str_table, const char* section_name);
 
     Elf32_Word getSectionIndex(HeaderStringTable const& header_str_table, SectionHeaderArray& sh_array, const char* section_name);
 

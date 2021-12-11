@@ -61,7 +61,7 @@ HeaderStringTable getHeaderStringTable(std::ifstream& file, SectionHeaderArray& 
 }
 
 TextSection extractTextSection(std::ifstream& file, HeaderStringTable const& hdr_str_table, SectionHeaderArray& sh_array) {
-    SectionHeader text_sec_header = elf_parsers::getSectionHeader(sh_array, hdr_str_table);
+    SectionHeader text_sec_header = elf_parsers::getSectionHeader(sh_array, hdr_str_table, TEXT_SECTION);
 
     Elf32_Word size = text_sec_header.sh_size / 2;
     TextSection text_section(size);
@@ -79,7 +79,7 @@ TextSection extractTextSection(std::ifstream& file, HeaderStringTable const& hdr
 
 SymbolTable
 extractSymbolTable(std::ifstream& file, HeaderStringTable const& hdr_str_table, SectionHeaderArray& sh_array) {
-    SectionHeader sym_tab_header = elf_parsers::getSectionHeader(sh_array, hdr_str_table);
+    SectionHeader sym_tab_header = elf_parsers::getSectionHeader(sh_array, hdr_str_table, SYMTAB_SECTION);
 
     Elf32_Word size = sym_tab_header.sh_size / sym_tab_header.sh_entsize;
     SymbolTable symbol_table(size);
@@ -95,9 +95,9 @@ extractSymbolTable(std::ifstream& file, HeaderStringTable const& hdr_str_table, 
     return symbol_table;
 }
 
-SectionHeader elf_parsers::getSectionHeader(SectionHeaderArray& sh_array, HeaderStringTable const& hdr_str_table) {
-    Elf32_Word symtab_index = getSectionIndex(hdr_str_table, sh_array, SYMTAB_SECTION);
-    return sh_array[symtab_index];
+SectionHeader elf_parsers::getSectionHeader(SectionHeaderArray& sh_array, HeaderStringTable const& hdr_str_table, const char* section_name) {
+    Elf32_Word index = getSectionIndex(hdr_str_table, sh_array, section_name);
+    return sh_array[index];
 }
 
 Elf32_Word elf_parsers::getSectionIndex(HeaderStringTable const& header_str_table, SectionHeaderArray& sh_array,
