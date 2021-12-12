@@ -3,11 +3,6 @@
 
 #include <iostream>
 
-uint32_t get_cmd(const Parcel head, const Parcel tail, std::size_t& i) {
-    i++;
-    return (head << 16) | tail;
-}
-
 unsigned short shift(const Parcel parcel) {
     if ((parcel & 0x3F) == 0x1F)
         return 2;
@@ -25,8 +20,9 @@ bool is16BitCmd(const Parcel parcel) {
     return (parcel & 0x3) != 0x3;
 }
 
+// IL -- Type I, Load instructions
 enum Types {
-    R, I, S, B, U, J
+    R, I, S, B, U, J, IL
 };
 
 void parse_R_type(uint32_t cmd, std::ostream& file, int line) {
@@ -93,7 +89,7 @@ void parse_R_type(uint32_t cmd, std::ostream& file, int line) {
             name = "unknown";
     }
 
-    sprintf(buff, "%08x %10s: %s x%d, x%d, x%d\n", line, "", name.c_str(), rd, rs1, rs2);
+    sprintf(buff, "%08x %10s %s x%d, x%d, x%d\n", line, "", name.c_str(), rd, rs1, rs2);
 
     file << buff;
 }
@@ -144,6 +140,104 @@ void parse_S_type(uint32_t cmd, std::ofstream& file, int line) {
     file << buff;
 }
 
+void parse_J_type(uint32_t cmd, std::ofstream& file, int line) {
+    char buff[100];
+    char rd = static_cast<char>((cmd >> 7) & 0x1F);
+    std::string name;
+
+    // sprintf(buff, "%08x %10s: %s x%d, %d(x%d)\n", line, "", name.c_str(), rd, imm, rs1);
+}
+
+void parse_I_type(uint32_t cmd, std::ofstream& file, int line) {
+    char buff[100];
+    char rd = static_cast<char>((cmd >> 7) & 0x1F);
+    char rs1 = static_cast<char>((cmd >> 15) & 0x1F);
+    char imm = static_cast<char>((cmd >> 20) & 0xFFF);
+    std::string name;
+
+    // check jalr
+    if ((cmd & 0x7F) == 0b1100111) {
+        name = "jalr";
+        sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", name.c_str(), rd, rs1, imm);
+        file << buff;
+        return;
+    }
+
+    // check i' (slli, srli, srai)
+    if ((cmd & 0x7F) == 0b0010011) {
+        switch ((cmd >> 12) & 0x7) {
+            case 1:
+                name = "slli";
+                break;
+            case 5:
+                if (cmd >> 20)
+                    name = "srai";
+                else
+                    name = "srli";
+        }
+        sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", name.c_str(), rd, rs1, imm);
+        file << buff;
+        return;
+    }
+
+    switch ((cmd >> 12) & 0x7) {
+        case 0:
+            name = "addi";
+            break;
+        case 2:
+            name = "slti";
+            break;
+        case 3:
+            name = "sltiu";
+            break;
+        case 4:
+            name = "xori";
+            break;
+        case 6:
+            name = "ori";
+            break;
+        case 7:
+            name = "andi";
+            break;
+        default:
+            name = "unknown_i";
+    }
+
+    sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", name.c_str(), rd, rs1, imm);
+    file << buff;
+}
+
+void parse_IL_type(uint32_t cmd, std::ofstream& file, int line) {
+    char buff[100];
+    char rd = static_cast<char>((cmd >> 7) & 0x1F);
+    char rs1 = static_cast<char>((cmd >> 15) & 0x1F);
+    char imm = static_cast<char>((cmd >> 20) & 0xFFF);
+    std::string name;
+
+    switch ((cmd >> 12) & 0x7) {
+        case 0:
+            name = "lb";
+            break;
+        case 1:
+            name = "lh";
+            break;
+        case 2:
+            name = "lw";
+            break;
+        case 4:
+            name = "lbu";
+            break;
+        case 6:
+            name = "lhu";
+            break;
+        default:
+            name = "unknown_il";
+    }
+
+    sprintf(buff, "%08x %10s: %s x%d, %d(%d)\n", line, "", name.c_str(), rd, imm, rs1);
+    file << buff;
+}
+
 Types get_type(uint32_t cmd) {
     switch (cmd & 0x7F) {
         case 0x33:
@@ -156,12 +250,13 @@ Types get_type(uint32_t cmd) {
             return J;
         case 0x37:
         case 0x17:
-            std::cout << "find U\n";
             return U;
-        case 0x67:
         case 0x3:
+            return IL;
+        case 0x67:
         case 0x13:
             return I;
+
         default:
             std::cerr << "Unknown command\n";
             exit(1);
@@ -180,6 +275,11 @@ void writeByType(Types type, uint32_t cmd, std::ofstream& file, int line) {
             parse_S_type(cmd, file, line);
             break;
         case I:
+            parse_I_type(cmd, file, line);
+            break;
+        case IL:
+            parse_IL_type(cmd, file, line);
+            break;
         case J:
         case B:
             file << "unknown type\n";
