@@ -162,7 +162,6 @@ void parse_I_type(uint32_t cmd, std::ofstream& file, int line) {
     }
 
     std::string name;
-
     switch ((cmd >> 12) & 0x7) {
         case 0:
             name = "addi";
@@ -230,6 +229,47 @@ void parse_IL_type(uint32_t cmd, std::ofstream& file, int line) {
     file << buff;
 }
 
+void parse_B_type(uint32_t cmd, std::ostream& file, int line) {
+    char buff[100];
+
+    uint8_t rs1 = (cmd >> 15) & 0x1F;
+    uint8_t rs2 = (cmd >> 20) & 0x1F;
+    std::string name;
+
+    uint8_t first = cmd >> 31;
+    uint8_t second = (cmd >> 7) & 0x1;
+    uint8_t third  = (cmd >> 25) & 0x3F;
+    uint8_t fourth = (cmd >> 8) & 0xF;
+    auto imm = static_cast<uint16_t>(((((((first << 1) | second) << 6) | third) << 4) | fourth) << 1);
+
+    switch ((cmd >> 12) & 0x7) {
+        case 0:
+            name = "beq";
+            break;
+        case 1:
+            name = "bne";
+            break;
+        case 3:
+            name = "blt";
+            break;
+        case 5:
+            name = "bge";
+            break;
+        case 6:
+            name = "bltu";
+            break;
+        case 7:
+            name = "bgeu";
+            break;
+    }
+    if (imm)
+        sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", name.c_str(), rs1, rs2, imm);
+    else
+        sprintf(buff, "%08x %10s: %s x%d, x%d, %x\n", line, "", name.c_str(), rs1, rs2, line);
+
+    file << buff;
+}
+
 Types get_type(uint32_t cmd) {
     switch (cmd & 0x7F) {
         case 0x33:
@@ -276,6 +316,9 @@ void writeByType(Types type, uint32_t cmd, std::ofstream& file, int line) {
             parse_J_type(cmd, file, line);
             break;
         case B:
+            parse_B_type(cmd, file, line);
+            break;
+        default:
             file << "unknown type\n";
     }
 }
