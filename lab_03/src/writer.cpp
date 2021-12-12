@@ -89,7 +89,7 @@ void parse_R_type(uint32_t cmd, std::ostream& file, int line) {
             name = "unknown";
     }
 
-    sprintf(buff, "%08x %10s %s x%d, x%d, x%d\n", line, "", name.c_str(), rd, rs1, rs2);
+    sprintf(buff, "%08x %10s: %s x%d, x%d, x%d\n", line, "", name.c_str(), rd, rs1, rs2);
 
     file << buff;
 }
@@ -145,7 +145,7 @@ void parse_J_type(uint32_t cmd, std::ofstream& file, int line) {
     char rd = static_cast<char>((cmd >> 7) & 0x1F);
     std::string name;
 
-    // sprintf(buff, "%08x %10s: %s x%d, %d(x%d)\n", line, "", name.c_str(), rd, imm, rs1);
+    file << "J type\n";
 }
 
 void parse_I_type(uint32_t cmd, std::ofstream& file, int line) {
@@ -153,36 +153,22 @@ void parse_I_type(uint32_t cmd, std::ofstream& file, int line) {
     char rd = static_cast<char>((cmd >> 7) & 0x1F);
     char rs1 = static_cast<char>((cmd >> 15) & 0x1F);
     char imm = static_cast<char>((cmd >> 20) & 0xFFF);
-    std::string name;
 
     // check jalr
     if ((cmd & 0x7F) == 0b1100111) {
-        name = "jalr";
-        sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", name.c_str(), rd, rs1, imm);
+        sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", "jalr", rd, rs1, imm);
         file << buff;
         return;
     }
 
-    // check i' (slli, srli, srai)
-    if ((cmd & 0x7F) == 0b0010011) {
-        switch ((cmd >> 12) & 0x7) {
-            case 1:
-                name = "slli";
-                break;
-            case 5:
-                if (cmd >> 20)
-                    name = "srai";
-                else
-                    name = "srli";
-        }
-        sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", name.c_str(), rd, rs1, imm);
-        file << buff;
-        return;
-    }
+    std::string name;
 
     switch ((cmd >> 12) & 0x7) {
         case 0:
             name = "addi";
+            break;
+        case 1:
+            name = "slli";
             break;
         case 2:
             name = "slti";
@@ -192,6 +178,12 @@ void parse_I_type(uint32_t cmd, std::ofstream& file, int line) {
             break;
         case 4:
             name = "xori";
+            break;
+        case 5:
+            if (cmd >> 20)
+                name = "srai";
+            else
+                name = "srli";
             break;
         case 6:
             name = "ori";
@@ -281,6 +273,8 @@ void writeByType(Types type, uint32_t cmd, std::ofstream& file, int line) {
             parse_IL_type(cmd, file, line);
             break;
         case J:
+            parse_J_type(cmd, file, line);
+            break;
         case B:
             file << "unknown type\n";
     }
