@@ -143,9 +143,20 @@ void parse_S_type(uint32_t cmd, std::ofstream& file, int line) {
 void parse_J_type(uint32_t cmd, std::ofstream& file, int line) {
     char buff[100];
     char rd = static_cast<char>((cmd >> 7) & 0x1F);
-    std::string name;
 
-    file << "J type\n";
+    uint8_t first = (cmd >> 31) & 0x1;
+    uint16_t second = (cmd >> 12) & 0xFF;
+    uint8_t third = (cmd >> 20) & 0x1;
+    uint16_t fourth = (cmd >> 21) & 0x3FF;
+
+    auto imm = static_cast<uint16_t> (((((((first << 8) | (second)) << 1) | third) << 10) | fourth) << 1);
+
+    if (imm)
+        sprintf(buff, "%08x %10s: %s x%d, %d\n", line, "", "jal", rd, imm);
+    else
+        sprintf(buff, "%08x %10s: %s x%d, %x\n", line, "", "jal", rd, line);
+
+    file << buff;
 }
 
 void parse_I_type(uint32_t cmd, std::ofstream& file, int line) {
