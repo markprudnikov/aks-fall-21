@@ -19,21 +19,7 @@ bool is16BitCmd(const Parcel parcel) {
     return (parcel & 0x3) != 0x3;
 }
 
-Quadrants get_quadrant(uint16_t cmd) {
-    switch (cmd & 0x3) {
-        case 0:
-            return Zero;
-        case 1:
-            return One;
-        case 2:
-            return Two;
-        default:
-            std::cerr << "Unknown command\n";
-            exit(1);
-    }
-}
-
-Types get_type(uint32_t cmd) {
+RV32_Types get_type(uint32_t cmd) {
     switch (cmd & 0x7F) {
         case 0x33:
             return R;
@@ -58,7 +44,7 @@ Types get_type(uint32_t cmd) {
     }
 }
 
-void type_parsers::parse_R_type(uint32_t cmd, std::ostream& file, int line) {
+void rv32_parsers::parse_R_type(uint32_t cmd, std::ostream& file, int line) {
     char buff[100];
 
     char rd = static_cast<char>((cmd >> 7) & 0x1F);
@@ -127,7 +113,7 @@ void type_parsers::parse_R_type(uint32_t cmd, std::ostream& file, int line) {
     file << buff;
 }
 
-void type_parsers::parse_U_type(uint32_t cmd, std::ostream& file, int line) {
+void rv32_parsers::parse_U_type(uint32_t cmd, std::ostream& file, int line) {
     char buff[100];
 
     char rd = static_cast<char>((cmd >> 7) & 0x1F);
@@ -146,7 +132,7 @@ void type_parsers::parse_U_type(uint32_t cmd, std::ostream& file, int line) {
     file << buff;
 }
 
-void type_parsers::parse_S_type(uint32_t cmd, std::ofstream& file, int line) {
+void rv32_parsers::parse_S_type(uint32_t cmd, std::ofstream& file, int line) {
     char buff[100];
 
     uint8_t tail = (cmd >> 7) & 0x1F;
@@ -173,7 +159,7 @@ void type_parsers::parse_S_type(uint32_t cmd, std::ofstream& file, int line) {
     file << buff;
 }
 
-void type_parsers::parse_J_type(uint32_t cmd, std::ofstream& file, int line) {
+void rv32_parsers::parse_J_type(uint32_t cmd, std::ofstream& file, int line) {
     char buff[100];
     char rd = static_cast<char>((cmd >> 7) & 0x1F);
 
@@ -192,7 +178,7 @@ void type_parsers::parse_J_type(uint32_t cmd, std::ofstream& file, int line) {
     file << buff;
 }
 
-void type_parsers::parse_I_type(uint32_t cmd, std::ofstream& file, int line) {
+void rv32_parsers::parse_I_type(uint32_t cmd, std::ofstream& file, int line) {
     char buff[100];
     char rd = static_cast<char>((cmd >> 7) & 0x1F);
     char rs1 = static_cast<char>((cmd >> 15) & 0x1F);
@@ -242,7 +228,7 @@ void type_parsers::parse_I_type(uint32_t cmd, std::ofstream& file, int line) {
     file << buff;
 }
 
-void type_parsers::parse_IL_type(uint32_t cmd, std::ofstream& file, int line) {
+void rv32_parsers::parse_IL_type(uint32_t cmd, std::ofstream& file, int line) {
     char buff[100];
     char rd = static_cast<char>((cmd >> 7) & 0x1F);
     char rs1 = static_cast<char>((cmd >> 15) & 0x1F);
@@ -273,7 +259,7 @@ void type_parsers::parse_IL_type(uint32_t cmd, std::ofstream& file, int line) {
     file << buff;
 }
 
-void type_parsers::parse_B_type(uint32_t cmd, std::ostream& file, int line) {
+void rv32_parsers::parse_B_type(uint32_t cmd, std::ostream& file, int line) {
     char buff[100];
 
     uint8_t rs1 = (cmd >> 15) & 0x1F;
@@ -314,14 +300,91 @@ void type_parsers::parse_B_type(uint32_t cmd, std::ostream& file, int line) {
     file << buff;
 }
 
-void quadrant_parsers::parse_Zero_Quad(uint16_t cmd, std::ofstream& file, int line) {
+RVC_Types get_type(uint16_t cmd) {
+
+    auto funct3 = cmd >> 13;
+    auto op = cmd & 0x3;
+
+    if (!op && (funct3 == 0))
+        return CIW;
+
+    if (!op && !(cmd >> 15))
+        return CL;
+
+    if (!op)
+        return CS;
+
+    if (op == 1 && ( funct3 == 1 || funct3 == 5 ))
+        return CJ;
+
+    if (op == 1 && ( funct3 == 6 || funct3 == 7 ))
+        return CB;
+
+    if (op == 1 && funct3 < 4)
+        return CI;
+
+    auto imm3 = (cmd >> 10) & 0x7;
+
+    if (op == 1 && funct3 == 4 && (imm3 == 3 || imm3 == 7))
+        return CR;
+
+    if (op == 1 && funct3 == 4)
+        return CI;
+
+    if (op == 2 && funct3 < 4)
+        return CI;
+
+    if (op == 2 && funct3 > 4)
+        return CR;
+
+    if (op == 2 && funct3 == 4)
+        return CSS;
+
+    return UNKWN;
+}
+
+void rvc_parsers::parse_CIW_type(uint16_t cmd, std::ofstream& file, int line) {
+    char buff[100];
+
+    std::string name = "C.ADDI4SPN";
+    uint8_t rd = (cmd >> 2) & 0x7;
+    uint8_t rs1 = 2;
+
+    uint8_t tail = (cmd >> 6) & 0x1;
+    uint8_t pred_tail = (cmd >> 5) & 0x1;
+    uint8_t pred_head = (cmd >> 11) & 0x3;
+    uint8_t head = (cmd >> 7) & 0xF;
+    uint8_t imm = (((((head << 2) | pred_head) << 1) | pred_tail) << 1) | tail;
+
+    sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", name.c_str(), rd, rs1, imm);
+
+    file << buff;
+}
+
+void rvc_parsers::parse_CL_type(uint16_t cmd, std::ofstream& file, int line) {
     //TODO
 }
 
-void quadrant_parsers::parse_One_Quad(uint16_t cmd, std::ofstream& file, int line) {
+void rvc_parsers::parse_CS_type(uint16_t cmd, std::ofstream& file, int line) {
     //TODO
 }
 
-void quadrant_parsers::parse_Two_Quad(uint16_t cmd, std::ofstream& file, int line) {
+void rvc_parsers::parse_CI_type(uint16_t cmd, std::ofstream& file, int line) {
+    //TODO
+}
+
+void rvc_parsers::parse_CJ_type(uint16_t cmd, std::ofstream& file, int line) {
+    //TODO
+}
+
+void rvc_parsers::parse_CB_type(uint16_t cmd, std::ofstream& file, int line) {
+    //TODO
+}
+
+void rvc_parsers::parse_CR_type(uint16_t cmd, std::ofstream& file, int line) {
+    //TODO
+}
+
+void rvc_parsers::parse_CSS_type(uint16_t cmd, std::ofstream& file, int line) {
     //TODO
 }

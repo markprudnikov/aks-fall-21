@@ -4,48 +4,36 @@
 
 #include <iostream>
 
-void writeByType(Types type, uint32_t cmd, std::ofstream& file, int line) {
+void writeByType(RV32_Types type, uint32_t cmd, std::ofstream& file, int line) {
     switch (type) {
         case R:
-            type_parsers::parse_R_type(cmd, file, line);
+            rv32_parsers::parse_R_type(cmd, file, line);
             break;
         case U:
-            type_parsers::parse_U_type(cmd, file, line);
+            rv32_parsers::parse_U_type(cmd, file, line);
             break;
         case S:
-            type_parsers::parse_S_type(cmd, file, line);
+            rv32_parsers::parse_S_type(cmd, file, line);
             break;
         case I:
-            type_parsers::parse_I_type(cmd, file, line);
+            rv32_parsers::parse_I_type(cmd, file, line);
             break;
         case IL:
-            type_parsers::parse_IL_type(cmd, file, line);
+            rv32_parsers::parse_IL_type(cmd, file, line);
             break;
         case J:
-            type_parsers::parse_J_type(cmd, file, line);
+            rv32_parsers::parse_J_type(cmd, file, line);
             break;
         case B:
-            type_parsers::parse_B_type(cmd, file, line);
+            rv32_parsers::parse_B_type(cmd, file, line);
             break;
         default:
             file << "unknown type\n";
     }
 }
 
-void writeByQuadrant(Quadrants q, uint16_t cmd, std::ofstream& file, int line) {
-    switch (q) {
-        case Zero:
-            quadrant_parsers::parse_Zero_Quad(cmd, file, line);
-            break;
-        case One:
-            quadrant_parsers::parse_One_Quad(cmd, file, line);
-            break;
-        case Two:
-            quadrant_parsers::parse_Two_Quad(cmd, file, line);
-            break;
-        default:
-            file << "unknown type\n";
-    }
+void writeByQuadrant(RVC_Types q, uint16_t cmd, std::ofstream& file, int line) {
+    // TODO
 }
 
 void writeTextSection(std::ofstream& file, TextSection& text_sec) {
@@ -55,12 +43,12 @@ void writeTextSection(std::ofstream& file, TextSection& text_sec) {
             uint16_t tail = text_sec[i];
             uint16_t head = text_sec[++i];
             uint32_t cmd = (head << 16) | tail;
-            Types type = get_type(cmd);
+            RV32_Types type = get_type(cmd);
             writeByType(type, cmd, file, line);
             line += 4;
         } else if (is16BitCmd(text_sec[i])) {
             uint16_t cmd = text_sec[i];
-            Quadrants q = get_quadrant(text_sec[i]);
+            RVC_Types q = get_type(text_sec[i]);
             writeByQuadrant(q, cmd, file, line);
             line += 2;
         } else {

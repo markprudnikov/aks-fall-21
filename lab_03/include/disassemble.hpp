@@ -1,22 +1,21 @@
-#ifndef LAB_03_DISASSEMBLE_HPP
-#define LAB_03_DISASSEMBLE_HPP
+#pragma one
 
 #include "elf_parser.hpp"
 
 // IL -- Type I, Load instructions
-enum Types {
+enum RV32_Types {
     R, I, S, B, U, J, IL
 };
 
-enum Quadrants {
-    Zero, One, Two
+enum RVC_Types {
+    CIW, CL, CS, CI, CJ, CB, CR, CSS, UNKWN
 };
 
-Types get_type(uint32_t cmd);
+RV32_Types get_type(uint32_t cmd);
 
-Quadrants get_quadrant(uint16_t cmd);
+RVC_Types get_type(uint16_t cmd);
 
-namespace type_parsers {
+namespace rv32_parsers {
     void parse_R_type(uint32_t cmd, std::ostream& file, int line);
     void parse_U_type(uint32_t cmd, std::ostream& file, int line);
     void parse_S_type(uint32_t cmd, std::ofstream& file, int line);
@@ -26,10 +25,15 @@ namespace type_parsers {
     void parse_B_type(uint32_t cmd, std::ostream& file, int line);
 }
 
-namespace quadrant_parsers {
-    void parse_Zero_Quad(uint16_t cmd, std::ofstream& file, int line);
-    void parse_One_Quad(uint16_t cmd, std::ofstream& file, int line);
-    void parse_Two_Quad(uint16_t cmd, std::ofstream& file, int line);
+namespace rvc_parsers {
+    void parse_CIW_type(uint16_t cmd, std::ofstream& file, int line);
+    void parse_CL_type(uint16_t cmd, std::ofstream& file, int line);
+    void parse_CS_type(uint16_t cmd, std::ofstream& file, int line);
+    void parse_CI_type(uint16_t cmd, std::ofstream& file, int line);
+    void parse_CJ_type(uint16_t cmd, std::ofstream& file, int line);
+    void parse_CB_type(uint16_t cmd, std::ofstream& file, int line);
+    void parse_CR_type(uint16_t cmd, std::ofstream& file, int line);
+    void parse_CSS_type(uint16_t cmd, std::ofstream& file, int line);
 }
 
 unsigned short shift(Parcel parcel);
@@ -38,4 +42,3 @@ bool is32BitCmd(Parcel parcel);
 
 bool is16BitCmd(Parcel parcel);
 
-#endif //LAB_03_DISASSEMBLE_HPP
