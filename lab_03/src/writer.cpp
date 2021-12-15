@@ -1,6 +1,6 @@
 #include "writer.hpp"
 #include "symtab.hpp"
-#include "disassemble.hpp"
+
 
 #include <iostream>
 
@@ -41,6 +41,37 @@ std::string get_mark(int line, SymbolTable& symtab, const char* str_tab, int tex
     return "";
 }
 
+void writeRVCbyType(RVC_Types type, uint16_t cmd, std::ofstream& file, int line, const char* mark) {
+    switch (type) { 
+        case CIW:
+            rvc_parsers::parse_CIW_type(cmd, file, line, mark);
+            break;
+        case CI:
+            rvc_parsers::parse_CI_type(cmd, file, line, mark);
+            break;
+        case CL:
+        case CS:
+            rvc_parsers::parse_CL_CS_types(cmd, file, line, mark);
+            break;
+        case CSS:
+            rvc_parsers::parse_CSS_type(cmd, file, line, mark);
+            break;
+        case CJ:
+            rvc_parsers::parse_CJ_type(cmd, file, line, mark);
+            break;
+        case CB:
+            rvc_parsers::parse_CB_type(cmd, file, line, mark);
+            break;
+        case CR:
+            rvc_parsers::parse_CR_type(cmd, file, line, mark);
+            break;
+        case UNKWN:
+        default:
+            file << "unknown type of 16 bit cmd\n";
+            
+    }
+}
+
 void writeTextSection(std::ofstream& file, TextSection& text_sec, SymbolTable& symtab, const char* str_tab, int text_index) {
     int line = 0;
     
@@ -56,7 +87,7 @@ void writeTextSection(std::ofstream& file, TextSection& text_sec, SymbolTable& s
         } else if (is16BitCmd(text_sec[i])) {
             uint16_t cmd = text_sec[i];
             RVC_Types q = get_type(text_sec[i]);
-            // TODO Write
+            writeRVCbyType(q, cmd, file, line, mark.c_str());
             line += 2;
         } else {
             i += shift(text_sec[i]);
