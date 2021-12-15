@@ -355,7 +355,7 @@ void rvc_parsers::parse_CIW_type(uint16_t cmd, std::ofstream& file, int line) {
     uint8_t pred_head = (cmd >> 11) & 0x3;
     uint8_t head = (cmd >> 7) & 0xF;
     uint8_t imm = (((((head << 2) | pred_head) << 1) | pred_tail) << 1) | tail;
-
+    imm <<= 2; // zero-extended offset
     sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", name.c_str(), rd, rs1, imm);
 
     file << buff;
@@ -396,6 +396,8 @@ void rvc_parsers::parse_CL_CS_types(uint16_t cmd, std::ofstream& file, int line)
         offset = (((head << 3) | mid ) << 1) | tail;
     }
 
+    offset <<= 2; //zero-extended offset
+
     sprintf(buff, "%08x %10s: %s x%d, %d(x%d)\n", line, "", name.c_str(), rd, offset, rs1);
 
     file << buff;
@@ -426,7 +428,8 @@ void rvc_parsers::parse_CJ_type(uint16_t cmd, std::ofstream& file, int line) {
     char offset;
 
     // simm[11 | 4 | 9:8 | 10 | 6 | 7 | 3:1 | 5]    
-    
+    // head | ten | mid (nine, eight) | seven | six | five | four | tail (three, two, one) 
+
     uint8_t five = (cmd >> 2) & 0x1;
     uint8_t tail = (cmd >> 3) & 0x7;
     uint8_t seven = (cmd >> 6) & 0x1;
@@ -439,13 +442,29 @@ void rvc_parsers::parse_CJ_type(uint16_t cmd, std::ofstream& file, int line) {
     // мда
     // трэш
     offset = (((((((((((((head << 1) | ten) << 2) | mid) << 1) | seven) << 1) | six) << 1) | five) << 1) | four ) << 3) | tail;
+    offset <<= 1; // zero-extended offset
 
     sprintf(buff, "%08x %10s: %s x%d, %d\n", line, "", name.c_str(), rd, offset);    
     file << buff;
 }
 
 void rvc_parsers::parse_CB_type(uint16_t cmd, std::ofstream& file, int line) {
-    //TODO
+    char buff[100];
+
+    std::string name;
+    auto funct3 = cmd >> 13;
+    uint8_t rd;
+
+    if (funct3 == 6) {
+        name = "C.BEQZ";
+    }
+    else if (funct3 == 7) {
+        name = "C.BNEZ";
+    }
+    else 
+        name = "unknown command type CB";
+
+
 }
 
 void rvc_parsers::parse_CR_type(uint16_t cmd, std::ofstream& file, int line) {
@@ -453,5 +472,36 @@ void rvc_parsers::parse_CR_type(uint16_t cmd, std::ofstream& file, int line) {
 }
 
 void rvc_parsers::parse_CSS_type(uint16_t cmd, std::ofstream& file, int line) {
-    //TODO
+    char buff[100];
+
+    std::string name;
+    auto funct3 = cmd >> 13;
+    uint8_t rs2 = (cmd >> 2) & 0xF;
+    auto rs1 = 2;
+
+    uint8_t head;
+    uint8_t tail; 
+    
+    if (funct3 == 5)
+        name = "C.FSDSP";
+    else if (funct3 == 6)
+        name = "C.SWSP";
+    else if (funct3 == 7)
+        name = "FSWSP";
+    else 
+        name = "unknown name type CSS";
+
+    uint16_t offset;
+    if (funct3 == 6 || funct3 == 7) {
+        head = (cmd >> 7) & 0x3;
+        tail = (cmd >> 9) & 0xF;
+        offset = ((head << 4) | tail) << 3;
+    } else if (funct3 == 5) {
+        head = (cmd >> 7) & 0x7;
+        tail = (cmd >> 10) & 0x7;
+        offset = ((head << 3) | tail) << 3;
+    }
+
+    sprintf(buff, "%08x %10s: %s x%d, %d(x%d)\n", line, "", name.c_str(), rs2, offset, rs1);    
+    file << buff;
 }
