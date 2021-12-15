@@ -27,8 +27,7 @@ namespace rv32_parsers {
 
 namespace rvc_parsers {
     void parse_CIW_type(uint16_t cmd, std::ofstream& file, int line);
-    void parse_CL_type(uint16_t cmd, std::ofstream& file, int line);
-    void parse_CS_type(uint16_t cmd, std::ofstream& file, int line);
+    void parse_CL_CS_types(uint16_t cmd, std::ofstream& file, int line);
     void parse_CI_type(uint16_t cmd, std::ofstream& file, int line);
     void parse_CJ_type(uint16_t cmd, std::ofstream& file, int line);
     void parse_CB_type(uint16_t cmd, std::ofstream& file, int line);
