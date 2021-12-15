@@ -348,7 +348,7 @@ void rvc_parsers::parse_CIW_type(uint16_t cmd, std::ofstream& file, int line) {
 
     std::string name = "C.ADDI4SPN";
     uint8_t rd = (cmd >> 2) & 0x7;
-    uint8_t rs1 = 2;
+    uint8_t rs1 = 2; // always 2
 
     uint8_t tail = (cmd >> 6) & 0x1;
     uint8_t pred_tail = (cmd >> 5) & 0x1;
@@ -362,7 +362,36 @@ void rvc_parsers::parse_CIW_type(uint16_t cmd, std::ofstream& file, int line) {
 }
 
 void rvc_parsers::parse_CL_type(uint16_t cmd, std::ofstream& file, int line) {
-    //TODO
+    char buff[100];
+
+    std::string name;
+    uint8_t rd = (cmd >> 2) & 0x7;
+    uint8_t rs1 = (cmd >> 7) & 0x7;
+    auto funct3 = cmd >> 13;
+    uint8_t offset = 0;
+
+    if (funct3 == 1) {
+        name = "C.FLD";
+        uint8_t head = (cmd >> 5) & 0x3;
+        uint8_t tail = (cmd >> 10) & 0x7;
+        offset = (head << 3) | tail;
+    } else if (funct3 == 2) {
+        name = "C.LW";
+        uint8_t tail = (cmd >> 6) & 0x1;
+        uint8_t head = (cmd >> 5) & 0x1;
+        uint8_t mid = (cmd >> 10) & 0x7;
+        offset = (((head << 3) | mid ) << 1) | tail;
+    } else if (funct3 == 3) {
+        name = "C.FLW";
+        uint8_t tail = (cmd >> 6) & 0x1;
+        uint8_t head = (cmd >> 5) & 0x1;
+        uint8_t mid = (cmd >> 10) & 0x7;
+        offset = (((head << 3) | mid ) << 1) | tail;
+    } else
+        name = "unknown command type CL";
+
+    sprintf(buff, "%08x %10s: %s x%d, %d(x%d)\n", line, "", name.c_str(), rd, offset, rs1);
+    file << buff;
 }
 
 void rvc_parsers::parse_CS_type(uint16_t cmd, std::ofstream& file, int line) {
