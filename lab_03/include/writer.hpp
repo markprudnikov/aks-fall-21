@@ -11,7 +11,7 @@
 #define SYMBOL_FORMAT "[%4i] 0x%-15X %5i %-8s %-8s %-8s %6s %s\n"
 #define HEADER_FORMAT "%s %-15s %7s %-8s %-8s %-8s %6s %s\n"
 
-void writeTextSection(std::ofstream& file, TextSection& text_sec);
+void writeTextSection(std::ofstream& file, TextSection& text_sec, SymbolTable& symtab, const char* str_tab, int text_index);
 void writeSymbolTable(std::ofstream& file, SymbolTable& sym_tab, const char* str_tab);
 
 namespace writer_impl {

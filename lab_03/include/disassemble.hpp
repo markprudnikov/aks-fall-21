@@ -16,13 +16,13 @@ RV32_Types get_type(uint32_t cmd);
 RVC_Types get_type(uint16_t cmd);
 
 namespace rv32_parsers {
-    void parse_R_type(uint32_t cmd, std::ostream& file, int line);
-    void parse_U_type(uint32_t cmd, std::ostream& file, int line);
-    void parse_S_type(uint32_t cmd, std::ofstream& file, int line);
-    void parse_J_type(uint32_t cmd, std::ofstream& file, int line);
-    void parse_I_type(uint32_t cmd, std::ofstream& file, int line);
-    void parse_IL_type(uint32_t cmd, std::ofstream& file, int line);
-    void parse_B_type(uint32_t cmd, std::ostream& file, int line);
+    void parse_R_type(uint32_t cmd, std::ostream& file, int line, const char* mark);
+    void parse_U_type(uint32_t cmd, std::ostream& file, int line, const char* mark);
+    void parse_S_type(uint32_t cmd, std::ofstream& file, int line, const char* mark);
+    void parse_J_type(uint32_t cmd, std::ofstream& file, int line, const char* mark);
+    void parse_I_type(uint32_t cmd, std::ofstream& file, int line, const char* mark);
+    void parse_IL_type(uint32_t cmd, std::ofstream& file, int line, const char* mark);
+    void parse_B_type(uint32_t cmd, std::ostream& file, int line, const char* mark);
 }
 
 namespace rvc_parsers {

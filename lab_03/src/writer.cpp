@@ -4,52 +4,59 @@
 
 #include <iostream>
 
-void writeByType(RV32_Types type, uint32_t cmd, std::ofstream& file, int line) {
+void writeByType(RV32_Types type, uint32_t cmd, std::ofstream& file, int line, const char* mark) {
     switch (type) {
         case R:
-            rv32_parsers::parse_R_type(cmd, file, line);
+            rv32_parsers::parse_R_type(cmd, file, line, mark);
             break;
         case U:
-            rv32_parsers::parse_U_type(cmd, file, line);
+            rv32_parsers::parse_U_type(cmd, file, line, mark);
             break;
         case S:
-            rv32_parsers::parse_S_type(cmd, file, line);
+            rv32_parsers::parse_S_type(cmd, file, line, mark);
             break;
         case I:
-            rv32_parsers::parse_I_type(cmd, file, line);
+            rv32_parsers::parse_I_type(cmd, file, line, mark);
             break;
         case IL:
-            rv32_parsers::parse_IL_type(cmd, file, line);
+            rv32_parsers::parse_IL_type(cmd, file, line, mark);
             break;
         case J:
-            rv32_parsers::parse_J_type(cmd, file, line);
+            rv32_parsers::parse_J_type(cmd, file, line, mark);
             break;
         case B:
-            rv32_parsers::parse_B_type(cmd, file, line);
+            rv32_parsers::parse_B_type(cmd, file, line, mark);
             break;
         default:
             file << "unknown type\n";
     }
 }
 
-void writeByQuadrant(RVC_Types q, uint16_t cmd, std::ofstream& file, int line) {
-    // TODO
+std::string get_mark(int line, SymbolTable& symtab, const char* str_tab, int text_index) {
+    for (auto s : symtab) {
+        if (s.st_value == line && s.st_shndx == text_index)
+            return std::string(str_tab + s.st_name) + ":";
+    }
+
+    return "";
 }
 
-void writeTextSection(std::ofstream& file, TextSection& text_sec) {
+void writeTextSection(std::ofstream& file, TextSection& text_sec, SymbolTable& symtab, const char* str_tab, int text_index) {
     int line = 0;
+    
     for (std::size_t i = 0; i < text_sec.size(); ++i) {
+        std::string mark = get_mark(line, symtab, str_tab, text_index);
         if (is32BitCmd(text_sec[i])) {
             uint16_t tail = text_sec[i];
             uint16_t head = text_sec[++i];
             uint32_t cmd = (head << 16) | tail;
             RV32_Types type = get_type(cmd);
-            writeByType(type, cmd, file, line);
+            writeByType(type, cmd, file, line, mark.c_str());
             line += 4;
         } else if (is16BitCmd(text_sec[i])) {
             uint16_t cmd = text_sec[i];
             RVC_Types q = get_type(text_sec[i]);
-            writeByQuadrant(q, cmd, file, line);
+            // TODO Write
             line += 2;
         } else {
             i += shift(text_sec[i]);

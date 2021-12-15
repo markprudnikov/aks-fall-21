@@ -44,7 +44,7 @@ RV32_Types get_type(uint32_t cmd) {
     }
 }
 
-void rv32_parsers::parse_R_type(uint32_t cmd, std::ostream& file, int line) {
+void rv32_parsers::parse_R_type(uint32_t cmd, std::ostream& file, int line, const char* mark) {
     char buff[100];
 
     char rd = static_cast<char>((cmd >> 7) & 0x1F);
@@ -108,12 +108,12 @@ void rv32_parsers::parse_R_type(uint32_t cmd, std::ostream& file, int line) {
             name = "unknown";
     }
 
-    sprintf(buff, "%08x %10s: %s x%d, x%d, x%d\n", line, "", name.c_str(), rd, rs1, rs2);
+    sprintf(buff, "%08x %10s %s x%d, x%d, x%d\n", line, mark, name.c_str(), rd, rs1, rs2);
 
     file << buff;
 }
 
-void rv32_parsers::parse_U_type(uint32_t cmd, std::ostream& file, int line) {
+void rv32_parsers::parse_U_type(uint32_t cmd, std::ostream& file, int line, const char* mark) {
     char buff[100];
 
     char rd = static_cast<char>((cmd >> 7) & 0x1F);
@@ -127,12 +127,12 @@ void rv32_parsers::parse_U_type(uint32_t cmd, std::ostream& file, int line) {
         name = "unknown_u";
 
 
-    sprintf(buff, "%08x %10s: %s x%d, %x\n", line, "", name.c_str(), rd, imm);
+    sprintf(buff, "%08x %10s %s x%d, %x\n", line, mark, name.c_str(), rd, imm);
 
     file << buff;
 }
 
-void rv32_parsers::parse_S_type(uint32_t cmd, std::ofstream& file, int line) {
+void rv32_parsers::parse_S_type(uint32_t cmd, std::ofstream& file, int line, const char* mark) {
     char buff[100];
 
     uint8_t tail = (cmd >> 7) & 0x1F;
@@ -154,12 +154,12 @@ void rv32_parsers::parse_S_type(uint32_t cmd, std::ofstream& file, int line) {
             break;
     }
 
-    sprintf(buff, "%08x %10s: %s x%d, %d(x%d)\n", line, "", name.c_str(), rs2, imm, rs1);
+    sprintf(buff, "%08x %10s %s x%d, %d(x%d)\n", line, mark, name.c_str(), rs2, imm, rs1);
 
     file << buff;
 }
 
-void rv32_parsers::parse_J_type(uint32_t cmd, std::ofstream& file, int line) {
+void rv32_parsers::parse_J_type(uint32_t cmd, std::ofstream& file, int line, const char* mark) {
     char buff[100];
     char rd = static_cast<char>((cmd >> 7) & 0x1F);
 
@@ -171,14 +171,14 @@ void rv32_parsers::parse_J_type(uint32_t cmd, std::ofstream& file, int line) {
     auto imm = static_cast<uint16_t> (((((((first << 8) | (second)) << 1) | third) << 10) | fourth) << 1);
 
     if (imm)
-        sprintf(buff, "%08x %10s: %s x%d, %d\n", line, "", "jal", rd, imm);
+        sprintf(buff, "%08x %10s %s x%d, %d\n", line, mark, "jal", rd, imm);
     else
-        sprintf(buff, "%08x %10s: %s x%d, %x\n", line, "", "jal", rd, line);
+        sprintf(buff, "%08x %10s %s x%d, %x\n", line, mark, "jal", rd, line);
 
     file << buff;
 }
 
-void rv32_parsers::parse_I_type(uint32_t cmd, std::ofstream& file, int line) {
+void rv32_parsers::parse_I_type(uint32_t cmd, std::ofstream& file, int line, const char* mark) {
     char buff[100];
     char rd = static_cast<char>((cmd >> 7) & 0x1F);
     char rs1 = static_cast<char>((cmd >> 15) & 0x1F);
@@ -186,7 +186,7 @@ void rv32_parsers::parse_I_type(uint32_t cmd, std::ofstream& file, int line) {
 
     // check jalr
     if ((cmd & 0x7F) == 0b1100111) {
-        sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", "jalr", rd, rs1, imm);
+        sprintf(buff, "%08x %10s %s x%d, x%d, %d\n", line, mark, "jalr", rd, rs1, imm);
         file << buff;
         return;
     }
@@ -224,11 +224,11 @@ void rv32_parsers::parse_I_type(uint32_t cmd, std::ofstream& file, int line) {
             name = "unknown_i";
     }
 
-    sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", name.c_str(), rd, rs1, imm);
+    sprintf(buff, "%08x %10s %s x%d, x%d, %d\n", line, mark, name.c_str(), rd, rs1, imm);
     file << buff;
 }
 
-void rv32_parsers::parse_IL_type(uint32_t cmd, std::ofstream& file, int line) {
+void rv32_parsers::parse_IL_type(uint32_t cmd, std::ofstream& file, int line, const char* mark) {
     char buff[100];
     char rd = static_cast<char>((cmd >> 7) & 0x1F);
     char rs1 = static_cast<char>((cmd >> 15) & 0x1F);
@@ -255,11 +255,11 @@ void rv32_parsers::parse_IL_type(uint32_t cmd, std::ofstream& file, int line) {
             name = "unknown_il";
     }
 
-    sprintf(buff, "%08x %10s: %s x%d, %d(%d)\n", line, "", name.c_str(), rd, imm, rs1);
+    sprintf(buff, "%08x %10s %s x%d, %d(%d)\n", line, mark, name.c_str(), rd, imm, rs1);
     file << buff;
 }
 
-void rv32_parsers::parse_B_type(uint32_t cmd, std::ostream& file, int line) {
+void rv32_parsers::parse_B_type(uint32_t cmd, std::ostream& file, int line, const char* mark) {
     char buff[100];
 
     uint8_t rs1 = (cmd >> 15) & 0x1F;
@@ -293,9 +293,9 @@ void rv32_parsers::parse_B_type(uint32_t cmd, std::ostream& file, int line) {
             break;
     }
     if (imm)
-        sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", name.c_str(), rs1, rs2, imm);
+        sprintf(buff, "%08x %10s %s x%d, x%d, %d\n", line, mark, name.c_str(), rs1, rs2, imm);
     else
-        sprintf(buff, "%08x %10s: %s x%d, x%d, %x\n", line, "", name.c_str(), rs1, rs2, line);
+        sprintf(buff, "%08x %10s %s x%d, x%d, %x\n", line, mark, name.c_str(), rs1, rs2, line);
 
     file << buff;
 }
@@ -356,7 +356,7 @@ void rvc_parsers::parse_CIW_type(uint16_t cmd, std::ofstream& file, int line) {
     uint8_t head = (cmd >> 7) & 0xF;
     uint8_t imm = (((((head << 2) | pred_head) << 1) | pred_tail) << 1) | tail;
     imm <<= 2; // zero-extended offset
-    sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", name.c_str(), rd, rs1, imm);
+    sprintf(buff, "%08x %10s %s x%d, x%d, %d\n", line, "", name.c_str(), rd, rs1, imm);
 
     file << buff;
 }
@@ -398,7 +398,7 @@ void rvc_parsers::parse_CL_CS_types(uint16_t cmd, std::ofstream& file, int line)
 
     offset <<= 2; //zero-extended offset
 
-    sprintf(buff, "%08x %10s: %s x%d, %d(x%d)\n", line, "", name.c_str(), rd, offset, rs1);
+    sprintf(buff, "%08x %10s %s x%d, %d(x%d)\n", line, "", name.c_str(), rd, offset, rs1);
 
     file << buff;
 }
@@ -408,7 +408,7 @@ void rvc_parsers::parse_CI_type(uint16_t cmd, std::ofstream& file, int line) {
 
     // NOP
     if (cmd == 1) {
-        sprintf(buff, "%08x %10s: %s\n", line, "", "C.NOP");
+        sprintf(buff, "%08x %10s %s\n", line, "", "C.NOP");
         file << buff;
         return;
     }
@@ -428,7 +428,7 @@ void rvc_parsers::parse_CI_type(uint16_t cmd, std::ofstream& file, int line) {
             uint8_t tail = (cmd >> 2) & 0x1F;
             imm = (head << 5) | tail;
         }
-        sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", name.c_str(), rd, rd, imm);
+        sprintf(buff, "%08x %10s %s x%d, x%d, %d\n", line, "", name.c_str(), rd, rd, imm);
         
     } else if (funct3 == 1) { // FLDSP
         uint8_t frd = (cmd >> 7) & 0x1F;
@@ -437,7 +437,7 @@ void rvc_parsers::parse_CI_type(uint16_t cmd, std::ofstream& file, int line) {
         uint8_t tail = (cmd >> 5) & 0x3;
         uint16_t offset = (((head << 1) | mid) << 2) | tail;        
         offset <<= 3; // zero extended
-        sprintf(buff, "%08x %10s: %s x%d, %d(x%d)\n", line, "", "C.FLDSP", frd, offset, 2);    
+        sprintf(buff, "%08x %10s %s x%d, %d(x%d)\n", line, "", "C.FLDSP", frd, offset, 2);    
     } else if (funct3 == 2) { // LWSP or LI
         uint8_t op = cmd & 0x3;
         uint8_t rd = (cmd >> 7) & 0x1F;
@@ -448,7 +448,7 @@ void rvc_parsers::parse_CI_type(uint16_t cmd, std::ofstream& file, int line) {
 
         if (op == 1) { // LI
             int8_t simm = ((((cmd >> 12) & 0x1) << 4) | (cmd >> 2) & 0x1F);
-            sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", "C.LI", rd, rd, simm);
+            sprintf(buff, "%08x %10s %s x%d, x%d, %d\n", line, "", "C.LI", rd, rd, simm);
         } else if (op == 2) { // LWSP
             uint16_t offset;
             uint8_t head = (cmd >> 2) & 0x3;
@@ -456,7 +456,7 @@ void rvc_parsers::parse_CI_type(uint16_t cmd, std::ofstream& file, int line) {
             uint8_t mid = (cmd >> 12) & 0x1;
             offset = (((head << 1) | mid) << 3 ) | tail;
             offset <<= 2; // zero extended
-            sprintf(buff, "%08x %10s: %s x%d, %d(x%d)\n", line, "", "C.LWSP", rd, offset, 2);
+            sprintf(buff, "%08x %10s %s x%d, %d(x%d)\n", line, "", "C.LWSP", rd, offset, 2);
         }
     } else if (funct3 == 3) { //FLWSP or ADDI16SP, LUI
         uint8_t op = cmd & 0x3;
@@ -465,15 +465,15 @@ void rvc_parsers::parse_CI_type(uint16_t cmd, std::ofstream& file, int line) {
             if (rd == 2) {
                 uint8_t head = (cmd >> 12) & 0x1;
                 uint8_t pred_head = (cmd >> 3) & 0x3;
-                uint8_t tail = (((((((cmd >> 4) & 0x1) << 1) | ((cmd >> 2) & 0x1)) << 1) | ((cmd >> 6) & 0x1)));
-                int16_t imm = (((head << 2) | pred_head) << 3) | tail; // 6 bit
-                imm <<= 7; // zero extended
-                sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", "C.ADDI16SP", rd, rd, imm);
+                uint8_t tail = (((((((cmd >> 4) & 0x1) << 1) | ((cmd >> 2) & 0x1)) << 1) | ((cmd >> 6) & 0x1))); // may be error
+                int16_t imm = (((head << 2) | pred_head) << 3) | tail; // 10 bit
+                imm <<= 4; // zero extended
+                sprintf(buff, "%08x %10s %s x%d, x%d, %d\n", line, "", "C.ADDI16SP", rd, rd, imm);
             } else {
                 uint8_t head = (cmd >> 12) & 0x1;
                 uint8_t tail = (cmd >> 2) & 0x1F;
-                int16_t imm = (head << 16) | tail; // zero extended // сколько бит? ответ = 18
-                sprintf(buff, "%08x %10s: %s x%d, %d\n", line, "", "C.LUI", rd, imm);
+                int16_t imm = (head << 16) | tail;
+                sprintf(buff, "%08x %10s %s x%d, %d\n", line, "", "C.LUI", rd, imm);
             }
 
 
@@ -484,24 +484,24 @@ void rvc_parsers::parse_CI_type(uint16_t cmd, std::ofstream& file, int line) {
             uint8_t mid = (cmd >> 12) & 0x1;
             uint16_t offset = (((head << 1) | mid) << 3 ) | tail;
             offset <<= 2; // zero extended
-            sprintf(buff, "%08x %10s: %s x%d, %d(x%d)\n", line, "", "C.FLWSP", frd, offset, 2);
+            sprintf(buff, "%08x %10s %s x%d, %d(x%d)\n", line, "", "C.FLWSP", frd, offset, 2);
         } else {
             sprintf(buff, "unknown command\n");
         }
     } else if (funct3 == 4) { // SRLI, SRAI, ANDI
         uint8_t rd = (cmd >> 7) & 0x7;
-        if ((cmd >> 10) & 0x3 != 2) {
+        if (((cmd >> 10) & 0x3) != 2) {
             name = "C.ANDI";
             int8_t uimm = (cmd >> 2) & 0x1F;
-            sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", name.c_str(), rd, rd, uimm);    
-        } else if ((cmd >> 10) & 0x3 == 0) {
+            sprintf(buff, "%08x %10s %s x%d, x%d, %d\n", line, "", name.c_str(), rd, rd, uimm);    
+        } else if (((cmd >> 10) & 0x3) == 0) {
             name = "C.SRLI";
             uint8_t simm = (((cmd >> 12) & 0x1) << 5) | (cmd >> 2) & 0x1F;
-            sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", name.c_str(), rd, rd, simm);    
-        } else if ((cmd >> 10) & 0x3 == 0) {
+            sprintf(buff, "%08x %10s %s x%d, x%d, %d\n", line, "", name.c_str(), rd, rd, simm);    
+        } else if (((cmd >> 10) & 0x3) == 0) {
             name = "C.SRAI";
             uint8_t simm = (((cmd >> 12) & 0x1) << 5) | (cmd >> 2) & 0x1F;
-            sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", name.c_str(), rd, rd, simm);    
+            sprintf(buff, "%08x %10s %s x%d, x%d, %d\n", line, "", name.c_str(), rd, rd, simm);    
         }
     }
 
@@ -546,7 +546,7 @@ void rvc_parsers::parse_CJ_type(uint16_t cmd, std::ofstream& file, int line) {
     offset = (((((((((((((head << 1) | ten) << 2) | mid) << 1) | seven) << 1) | six) << 1) | five) << 1) | four ) << 3) | tail;
     offset <<= 1; // zero-extended offset
 
-    sprintf(buff, "%08x %10s: %s x%d, %d\n", line, "", name.c_str(), rd, offset);    
+    sprintf(buff, "%08x %10s %s x%d, %d\n", line, "", name.c_str(), rd, offset);    
     file << buff;
 }
 
@@ -576,7 +576,7 @@ void rvc_parsers::parse_CB_type(uint16_t cmd, std::ofstream& file, int line) {
     offset = (((((((head << 2) | pred_head) << 1) | mid) << 2) | pred_tail) << 2) | tail;
     offset <<= 1; // zero extended 
 
-    sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", name.c_str(), rs1, rs2, offset);
+    sprintf(buff, "%08x %10s %s x%d, x%d, %d\n", line, "", name.c_str(), rs1, rs2, offset);
 
     file << buff;
 }
@@ -605,7 +605,7 @@ void rvc_parsers::parse_CR_type(uint16_t cmd, std::ofstream& file, int line) {
             name = "C.ADDW";
         }
 
-        sprintf(buff, "%08x %10s: %s x%d, x%d, x%d\n", line, "", name.c_str(), rd, rd, rs2);
+        sprintf(buff, "%08x %10s %s x%d, x%d, x%d\n", line, "", name.c_str(), rd, rd, rs2);
     } else if (op == 2) {
         uint8_t rs2 = (cmd >> 2) & 0x1F;
         if (rs2 != 0) {
@@ -619,7 +619,7 @@ void rvc_parsers::parse_CR_type(uint16_t cmd, std::ofstream& file, int line) {
             else 
                 name = "C.ADD";
 
-            sprintf(buff, "%08x %10s: %s x%d, x%d, x%d\n", line, "", name.c_str(), rd, rs1, rs2);
+            sprintf(buff, "%08x %10s %s x%d, x%d, x%d\n", line, "", name.c_str(), rd, rs1, rs2);
         } else if (cmd == 0b1001000000000010) {
             sprintf(buff, "%08x %10s %s\n", line, "", "C.EBREAK");
         } else {
@@ -630,7 +630,7 @@ void rvc_parsers::parse_CR_type(uint16_t cmd, std::ofstream& file, int line) {
             else
                 name = "C.JALR";
         
-            sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", name.c_str(), 0, rs1, 0);
+            sprintf(buff, "%08x %10s %s x%d, x%d, %d\n", line, "", name.c_str(), 0, rs1, 0);
         }
     } else
         sprintf(buff, "unknown cmd\n");
@@ -670,6 +670,6 @@ void rvc_parsers::parse_CSS_type(uint16_t cmd, std::ofstream& file, int line) {
         offset = ((head << 3) | tail) << 3;
     }
 
-    sprintf(buff, "%08x %10s: %s x%d, %d(x%d)\n", line, "", name.c_str(), rs2, offset, rs1);    
+    sprintf(buff, "%08x %10s %s x%d, %d(x%d)\n", line, "", name.c_str(), rs2, offset, rs1);    
     file << buff;
 }
