@@ -463,7 +463,6 @@ void rvc_parsers::parse_CI_type(uint16_t cmd, std::ofstream& file, int line) {
         if (op == 1) { // LUI, ADDI16SP
             uint8_t rd = (cmd >> 7) & 0x1F;
             if (rd == 2) {
-                
                 uint8_t head = (cmd >> 12) & 0x1;
                 uint8_t pred_head = (cmd >> 3) & 0x3;
                 uint8_t tail = (((((((cmd >> 4) & 0x1) << 1) | ((cmd >> 2) & 0x1)) << 1) | ((cmd >> 6) & 0x1)));
@@ -583,7 +582,61 @@ void rvc_parsers::parse_CB_type(uint16_t cmd, std::ofstream& file, int line) {
 }
 
 void rvc_parsers::parse_CR_type(uint16_t cmd, std::ofstream& file, int line) {
-    //TODO
+    char buff[100];
+    uint8_t op = cmd & 0x3;
+    std::string name;
+    if (op == 1) {
+        uint8_t rd = (cmd >> 7) & 0x7;
+        uint8_t rs2 = (cmd >> 2) & 0x7;
+        uint8_t imm2 = (cmd >> 5) & 0x3;
+        uint8_t imm3 = (cmd >> 10) & 0x7;
+
+        if (imm2 == 0 && imm3 == 3) {
+            name = "C.SUB";
+        } else if (imm2 == 1 && imm3 == 3) {
+            name = "C.XOR";
+        } else if (imm2 == 2 && imm3 == 3) {
+            name = "C.OR";
+        } else if (imm2 == 3 && imm3 == 3) {
+            name = "C.AND";
+        } else if (imm2 == 0 && imm3 == 7) {
+            name = "C.SUBW";
+        } else if (imm2 == 1 && imm3 == 7) {
+            name = "C.ADDW";
+        }
+
+        sprintf(buff, "%08x %10s: %s x%d, x%d, x%d\n", line, "", name.c_str(), rd, rd, rs2);
+    } else if (op == 2) {
+        uint8_t rs2 = (cmd >> 2) & 0x1F;
+        if (rs2 != 0) {
+            // MV or ADD
+            uint8_t rd = (cmd >> 7) & 0x1F;
+            uint8_t rs1 = rd;
+            if (cmd >> 12 == 8) {
+                name = "C.MV";
+                rs1 = 2;
+            }
+            else 
+                name = "C.ADD";
+
+            sprintf(buff, "%08x %10s: %s x%d, x%d, x%d\n", line, "", name.c_str(), rd, rs1, rs2);
+        } else if (cmd == 0b1001000000000010) {
+            sprintf(buff, "%08x %10s %s\n", line, "", "C.EBREAK");
+        } else {
+            uint8_t rs1 = (cmd >> 7) & 0x1F;
+            uint8_t funct4 = (cmd >> 12);
+            if (funct4 == 8)
+                name = "C.JR";
+            else
+                name = "C.JALR";
+        
+            sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", name.c_str(), 0, rs1, 0);
+        }
+    } else
+        sprintf(buff, "unknown cmd\n");
+
+
+    file << buff;
 }
 
 void rvc_parsers::parse_CSS_type(uint16_t cmd, std::ofstream& file, int line) {
