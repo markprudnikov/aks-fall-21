@@ -383,7 +383,7 @@ void rvc_parsers::parse_CL_CS_types(uint16_t cmd, std::ofstream& file, int line)
     } else if (funct3 == 7) {
         name = "C.FSW";
     } else
-        name = "unknown command type CL";
+        name = "unknown command type CL / CS";
 
     if (funct3 == 1 || funct3 == 5) {
         uint8_t head = (cmd >> 5) & 0x3;
@@ -404,7 +404,110 @@ void rvc_parsers::parse_CL_CS_types(uint16_t cmd, std::ofstream& file, int line)
 }
 
 void rvc_parsers::parse_CI_type(uint16_t cmd, std::ofstream& file, int line) {
-    //TODO
+    char buff[100];
+
+    // NOP
+    if (cmd == 1) {
+        sprintf(buff, "%08x %10s: %s\n", line, "", "C.NOP");
+        file << buff;
+        return;
+    }
+
+    std::string name;
+    auto funct3 = cmd >> 13;
+    
+    if (funct3 == 0) { // SLLI, ADDI
+        auto rd = (cmd >> 7) & 0x1F;
+        uint8_t head = (cmd >> 12) & 0x1;
+        int8_t imm;
+        if (head == 0) {
+            name = "C.SLLI";
+            imm = (cmd >> 2) & 0x1F;
+        } else {
+            name = "C.ADDI";
+            uint8_t tail = (cmd >> 2) & 0x1F;
+            imm = (head << 5) | tail;
+        }
+        sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", name.c_str(), rd, rd, imm);
+        
+    } else if (funct3 == 1) { // FLDSP
+        uint8_t frd = (cmd >> 7) & 0x1F;
+        uint8_t head = (cmd >> 2) & 0x7;
+        uint8_t mid = (cmd >> 12) & 0x1;
+        uint8_t tail = (cmd >> 5) & 0x3;
+        uint16_t offset = (((head << 1) | mid) << 2) | tail;        
+        offset <<= 3; // zero extended
+        sprintf(buff, "%08x %10s: %s x%d, %d(x%d)\n", line, "", "C.FLDSP", frd, offset, 2);    
+    } else if (funct3 == 2) { // LWSP or LI
+        uint8_t op = cmd & 0x3;
+        uint8_t rd = (cmd >> 7) & 0x1F;
+        if (rd == 0) {
+            file << "unknown cmd\n";
+            return;
+        }
+
+        if (op == 1) { // LI
+            int8_t simm = ((((cmd >> 12) & 0x1) << 4) | (cmd >> 2) & 0x1F);
+            sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", "C.LI", rd, rd, simm);
+        } else if (op == 2) { // LWSP
+            uint16_t offset;
+            uint8_t head = (cmd >> 2) & 0x3;
+            uint8_t tail = (cmd >> 4) & 0x7;
+            uint8_t mid = (cmd >> 12) & 0x1;
+            offset = (((head << 1) | mid) << 3 ) | tail;
+            offset <<= 2; // zero extended
+            sprintf(buff, "%08x %10s: %s x%d, %d(x%d)\n", line, "", "C.LWSP", rd, offset, 2);
+        }
+    } else if (funct3 == 3) { //FLWSP or ADDI16SP, LUI
+        uint8_t op = cmd & 0x3;
+        if (op == 1) { // LUI, ADDI16SP
+            uint8_t rd = (cmd >> 7) & 0x1F;
+            if (rd == 2) {
+                
+                uint8_t head = (cmd >> 12) & 0x1;
+                uint8_t pred_head = (cmd >> 3) & 0x3;
+                uint8_t tail = (((((((cmd >> 4) & 0x1) << 1) | ((cmd >> 2) & 0x1)) << 1) | ((cmd >> 6) & 0x1)));
+                int16_t imm = (((head << 2) | pred_head) << 3) | tail; // 6 bit
+                imm <<= 7; // zero extended
+                sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", "C.ADDI16SP", rd, rd, imm);
+            } else {
+                uint8_t head = (cmd >> 12) & 0x1;
+                uint8_t tail = (cmd >> 2) & 0x1F;
+                int16_t imm = (head << 16) | tail; // zero extended // сколько бит? ответ = 18
+                sprintf(buff, "%08x %10s: %s x%d, %d\n", line, "", "C.LUI", rd, imm);
+            }
+
+
+        } else if (op == 2) { // FLWSP
+            uint8_t frd = (cmd >> 7) & 0x1F;
+            uint8_t head = (cmd >> 2) & 0x3;
+            uint8_t tail = (cmd >> 4) & 0x7;
+            uint8_t mid = (cmd >> 12) & 0x1;
+            uint16_t offset = (((head << 1) | mid) << 3 ) | tail;
+            offset <<= 2; // zero extended
+            sprintf(buff, "%08x %10s: %s x%d, %d(x%d)\n", line, "", "C.FLWSP", frd, offset, 2);
+        } else {
+            sprintf(buff, "unknown command\n");
+        }
+    } else if (funct3 == 4) { // SRLI, SRAI, ANDI
+        uint8_t rd = (cmd >> 7) & 0x7;
+        if ((cmd >> 10) & 0x3 != 2) {
+            name = "C.ANDI";
+            int8_t uimm = (cmd >> 2) & 0x1F;
+            sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", name.c_str(), rd, rd, uimm);    
+        } else if ((cmd >> 10) & 0x3 == 0) {
+            name = "C.SRLI";
+            uint8_t simm = (((cmd >> 12) & 0x1) << 5) | (cmd >> 2) & 0x1F;
+            sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", name.c_str(), rd, rd, simm);    
+        } else if ((cmd >> 10) & 0x3 == 0) {
+            name = "C.SRAI";
+            uint8_t simm = (((cmd >> 12) & 0x1) << 5) | (cmd >> 2) & 0x1F;
+            sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", name.c_str(), rd, rd, simm);    
+        }
+    }
+
+
+    file << buff;
 }
 
 void rvc_parsers::parse_CJ_type(uint16_t cmd, std::ofstream& file, int line) {
@@ -453,8 +556,8 @@ void rvc_parsers::parse_CB_type(uint16_t cmd, std::ofstream& file, int line) {
 
     std::string name;
     auto funct3 = cmd >> 13;
-    uint8_t rd;
-
+    uint8_t rs1 = (cmd >> 7) & 0x7;
+    uint8_t rs2 = 0; // always
     if (funct3 == 6) {
         name = "C.BEQZ";
     }
@@ -465,6 +568,18 @@ void rvc_parsers::parse_CB_type(uint16_t cmd, std::ofstream& file, int line) {
         name = "unknown command type CB";
 
 
+    int16_t offset;
+    uint8_t head = (cmd >> 12) & 0x1;
+    uint8_t pred_head = (cmd >> 5) & 0x3;
+    uint8_t mid = (cmd >> 2) & 0x1;
+    uint8_t pred_tail = (cmd >> 10) & 0x3;
+    uint8_t tail = (cmd >> 3) & 0x3;
+    offset = (((((((head << 2) | pred_head) << 1) | mid) << 2) | pred_tail) << 2) | tail;
+    offset <<= 1; // zero extended 
+
+    sprintf(buff, "%08x %10s: %s x%d, x%d, %d\n", line, "", name.c_str(), rs1, rs2, offset);
+
+    file << buff;
 }
 
 void rvc_parsers::parse_CR_type(uint16_t cmd, std::ofstream& file, int line) {
