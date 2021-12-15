@@ -18,6 +18,7 @@ void writeByType(RV32_Types type, uint32_t cmd, std::ofstream& file, int line, c
 void writeRVCbyTypes(RVC_Types type, uint16_t cmd, std::ofstream& file, int line, const char* mark);
 
 namespace writer_impl {
+    std::string get_mark(int line, SymbolTable& symtab, const char* str_tab, int text_index);
     void writeHeader(std::ofstream& file);
     void writeSymbol(std::ofstream& file, Symbol& s, const char* str_tab, std::size_t index);
 }

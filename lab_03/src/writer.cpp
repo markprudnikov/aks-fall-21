@@ -32,7 +32,7 @@ void writeByType(RV32_Types type, uint32_t cmd, std::ofstream& file, int line, c
     }
 }
 
-std::string get_mark(int line, SymbolTable& symtab, const char* str_tab, int text_index) {
+std::string writer_impl::get_mark(int line, SymbolTable& symtab, const char* str_tab, int text_index) {
     for (auto s : symtab) {
         if (s.st_value == line && s.st_shndx == text_index)
             return std::string(str_tab + s.st_name) + ":";
@@ -76,7 +76,7 @@ void writeTextSection(std::ofstream& file, TextSection& text_sec, SymbolTable& s
     int line = 0;
     
     for (std::size_t i = 0; i < text_sec.size(); ++i) {
-        std::string mark = get_mark(line, symtab, str_tab, text_index);
+        std::string mark = writer_impl::get_mark(line, symtab, str_tab, text_index);
         if (is32BitCmd(text_sec[i])) {
             uint16_t tail = text_sec[i];
             uint16_t head = text_sec[++i];

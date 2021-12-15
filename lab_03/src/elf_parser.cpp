@@ -101,8 +101,7 @@ SectionHeader elf_parsers::getSectionHeader(SectionHeaderArray& sh_array, Header
     return sh_array[index];
 }
 
-Elf32_Word elf_parsers::getSectionIndex(HeaderStringTable const& header_str_table, SectionHeaderArray& sh_array,
-                                        const char* section_name) {
+Elf32_Word elf_parsers::getSectionIndex(HeaderStringTable const& header_str_table, SectionHeaderArray& sh_array, const char* section_name) {
     Elf32_Word index = 0;
 
     for (; index < sh_array.size(); ++index) {
