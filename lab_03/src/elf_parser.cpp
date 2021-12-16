@@ -1,6 +1,5 @@
 #include <iostream>
 #include <cstring>
-#include <cassert>
 
 #include "elf.hpp"
 #include "elf_parser.hpp"

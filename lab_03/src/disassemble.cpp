@@ -6,8 +6,6 @@ unsigned short shift(const Parcel parcel) {
     if ((parcel & 0x3F) == 0x1F) // 48-bit check
         return 2;
 
-    auto tail = parcel & 0x7F;
-
     if ((parcel & 0x7F) == 0x3F) // 64-bit check
         return 3;
 
@@ -277,7 +275,7 @@ void rv32_parsers::parse_B_type(uint32_t cmd, std::ostream& file, int line, cons
     uint8_t second = (cmd >> 7) & 0x1;
     uint8_t third  = (cmd >> 25) & 0x3F;
     uint8_t fourth = (cmd >> 8) & 0xF;
-    auto imm = static_cast<uint16_t>(((((((first << 1) | second) << 6) | third) << 4) | fourth) << 1);
+    uint16_t imm = (((((((first << 1) | second) << 6) | third) << 4) | fourth) << 1);
 
     switch ((cmd >> 12) & 0x7) {
         case 0:
@@ -375,7 +373,6 @@ void rvc_parsers::parse_CL_CS_types(uint16_t cmd, std::ofstream& file, int line,
     uint8_t rd = (cmd >> 2) & 0x7;
     uint8_t rs1 = (cmd >> 7) & 0x7;
     auto funct3 = cmd >> 13;
-    uint8_t offset = 0;
 
     if (funct3 == 1) {
         name = "C.FLD";
@@ -391,7 +388,7 @@ void rvc_parsers::parse_CL_CS_types(uint16_t cmd, std::ofstream& file, int line,
         name = "C.FSW";
     } else
         name = "unknown command";
-
+    uint8_t offset;
     if (funct3 == 1 || funct3 == 5) {
         uint8_t head = (cmd >> 5) & 0x3;
         uint8_t tail = (cmd >> 10) & 0x7;
@@ -429,11 +426,11 @@ void rvc_parsers::parse_CI_type(uint16_t cmd, std::ofstream& file, int line, con
         int8_t imm;
         if (head == 0) {
             name = "C.SLLI";
-            imm = (cmd >> 2) & 0x1F;
+            imm = ((cmd >> 2) & 0x1F);
         } else {
             name = "C.ADDI";
             uint8_t tail = (cmd >> 2) & 0x1F;
-            imm = (head << 5) | tail;
+            imm = ((head << 5) | tail);
         }
         sprintf(buff, "%08x %10s %s x%d, x%d, %d\n", line, mark, name.c_str(), rd, rd, imm);
         
@@ -473,13 +470,13 @@ void rvc_parsers::parse_CI_type(uint16_t cmd, std::ofstream& file, int line, con
                 uint8_t head = (cmd >> 12) & 0x1;
                 uint8_t pred_head = (cmd >> 3) & 0x3;
                 uint8_t tail = (((((((cmd >> 4) & 0x1) << 1) | ((cmd >> 2) & 0x1)) << 1) | ((cmd >> 6) & 0x1))); // may be error
-                int16_t imm = (((head << 2) | pred_head) << 3) | tail; // 10 bit
+                int16_t imm = ((((head << 2) | pred_head) << 3) | tail); // 10 bit
                 imm <<= 4; // zero extended
                 sprintf(buff, "%08x %10s %s x%d, x%d, %d\n", line, mark, "C.ADDI16SP", rd, rd, imm);
             } else {
                 uint8_t head = (cmd >> 12) & 0x1;
                 uint8_t tail = (cmd >> 2) & 0x1F;
-                int16_t imm = (head << 16) | tail;
+                int16_t imm = ((head << 16) | tail);
                 sprintf(buff, "%08x %10s %s x%d, %d\n", line, mark, "C.LUI", rd, imm);
             }
 
@@ -521,7 +518,7 @@ void rvc_parsers::parse_CJ_type(uint16_t cmd, std::ofstream& file, int line, con
 
     std::string name;
     auto funct3 = cmd >> 13;
-    uint8_t rd;
+    uint8_t rd = 0;
 
     if (funct3 == 1) {
         name = "C.JAL";
@@ -529,12 +526,9 @@ void rvc_parsers::parse_CJ_type(uint16_t cmd, std::ofstream& file, int line, con
     }
     else if (funct3 == 5) {
         name = "C.J";
-        rd = 0;
     }
     else 
         name = "unknown command";
-
-    char offset;
 
     // simm[11 | 4 | 9:8 | 10 | 6 | 7 | 3:1 | 5]    
     // head | ten | mid (nine, eight) | seven | six | five | four | tail (three, two, one) 
@@ -550,7 +544,7 @@ void rvc_parsers::parse_CJ_type(uint16_t cmd, std::ofstream& file, int line, con
 
     // мда
     // трэш
-    offset = (((((((((((((head << 1) | ten) << 2) | mid) << 1) | seven) << 1) | six) << 1) | five) << 1) | four ) << 3) | tail;
+    int8_t offset = (((((((((((((head << 1) | ten) << 2) | mid) << 1) | seven) << 1) | six) << 1) | five) << 1) | four ) << 3) | tail;
     offset <<= 1; // zero-extended offset
 
     sprintf(buff, "%08x %10s %s x%d, %d\n", line, mark, name.c_str(), rd, offset);    
@@ -580,7 +574,7 @@ void rvc_parsers::parse_CB_type(uint16_t cmd, std::ofstream& file, int line, con
     uint8_t mid = (cmd >> 2) & 0x1;
     uint8_t pred_tail = (cmd >> 10) & 0x3;
     uint8_t tail = (cmd >> 3) & 0x3;
-    offset = (((((((head << 2) | pred_head) << 1) | mid) << 2) | pred_tail) << 2) | tail;
+    offset = static_cast<int16_t>((((((((head << 2) | pred_head) << 1) | mid) << 2) | pred_tail) << 2) | tail);
     offset <<= 1; // zero extended 
 
     sprintf(buff, "%08x %10s %s x%d, x%d, %d\n", line, mark, name.c_str(), rs1, rs2, offset);
@@ -666,7 +660,7 @@ void rvc_parsers::parse_CSS_type(uint16_t cmd, std::ofstream& file, int line, co
     else 
         name = "unknown command";
 
-    uint16_t offset;
+    uint16_t offset = 0;
     if (funct3 == 6 || funct3 == 7) {
         head = (cmd >> 7) & 0x3;
         tail = (cmd >> 9) & 0xF;
