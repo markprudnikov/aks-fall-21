@@ -25,7 +25,6 @@ void disassemble(std::ifstream& src, std::ofstream& dst, const ElfHeader& elf_he
     SymbolTable symbol_table = extractSymbolTable(src, header_str_table, sh_array);
 
     int text_index = (int) elf_parsers::getSectionIndex(header_str_table, sh_array, TEXT_SECTION);
-
     writeTextSection(dst, text_section, symbol_table, header_str_table.c_str(), text_index);
     writeSymbolTable(dst, symbol_table, header_str_table.c_str());
 }

@@ -36,5 +36,4 @@ namespace elf_parsers {
 
     void set_offset(std::ifstream& file, Elf32_Off offset);
 
-    // void extract_section_to_file(SectionHeader const& section_header, std::ifstream& file, std::ofstream& output);
 }

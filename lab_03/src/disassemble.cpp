@@ -228,7 +228,7 @@ void rv32_parsers::parse_I_type(uint32_t cmd, std::ofstream& file, int line, con
             name = "andi";
             break;
         default:
-            name = "unknown_i";
+            name = "unknown command";
     }
 
     sprintf(buff, "%08x %10s %s x%d, x%d, %d\n", line, mark, name.c_str(), rd, rs1, imm);
@@ -259,7 +259,7 @@ void rv32_parsers::parse_IL_type(uint32_t cmd, std::ofstream& file, int line, co
             name = "lhu";
             break;
         default:
-            name = "unknown_il";
+            name = "unknown command";
     }
 
     sprintf(buff, "%08x %10s %s x%d, %d(%d)\n", line, mark, name.c_str(), rd, imm, rs1);
@@ -390,7 +390,7 @@ void rvc_parsers::parse_CL_CS_types(uint16_t cmd, std::ofstream& file, int line,
     } else if (funct3 == 7) {
         name = "C.FSW";
     } else
-        name = "unknown command type CL / CS";
+        name = "unknown command";
 
     if (funct3 == 1 || funct3 == 5) {
         uint8_t head = (cmd >> 5) & 0x3;
@@ -532,7 +532,7 @@ void rvc_parsers::parse_CJ_type(uint16_t cmd, std::ofstream& file, int line, con
         rd = 0;
     }
     else 
-        name = "unknown command type CJ";
+        name = "unknown command";
 
     char offset;
 
@@ -571,7 +571,7 @@ void rvc_parsers::parse_CB_type(uint16_t cmd, std::ofstream& file, int line, con
         name = "C.BNEZ";
     }
     else 
-        name = "unknown command type CB";
+        name = "unknown command";
 
 
     int16_t offset;
@@ -640,7 +640,7 @@ void rvc_parsers::parse_CR_type(uint16_t cmd, std::ofstream& file, int line, con
             sprintf(buff, "%08x %10s %s x%d, x%d, %d\n", line, mark, name.c_str(), 0, rs1, 0);
         }
     } else
-        sprintf(buff, "unknown cmd\n");
+        sprintf(buff, "unknown command\n");
 
 
     file << buff;
@@ -664,7 +664,7 @@ void rvc_parsers::parse_CSS_type(uint16_t cmd, std::ofstream& file, int line, co
     else if (funct3 == 7)
         name = "FSWSP";
     else 
-        name = "unknown name type CSS";
+        name = "unknown command";
 
     uint16_t offset;
     if (funct3 == 6 || funct3 == 7) {
