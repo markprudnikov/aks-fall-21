@@ -39,8 +39,7 @@ RV32_Types get_type(uint32_t cmd) {
             return I;
 
         default:
-            std::cerr << "Unknown command\n";
-            exit(1);
+            return UNKNWN;
     }
 }
 
@@ -105,7 +104,7 @@ void rv32_parsers::parse_R_type(uint32_t cmd, std::ostream& file, int line, cons
                 name = "and";
             break;
         default:
-            name = "unknown";
+            name = "unknown command";
     }
 
     sprintf(buff, "%08x %10s %s x%d, x%d, x%d\n", line, mark, name.c_str(), rd, rs1, rs2);

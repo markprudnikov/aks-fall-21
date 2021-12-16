@@ -4,7 +4,7 @@
 
 // IL -- Type I, Load instructions
 enum RV32_Types {
-    R, I, S, B, U, J, IL
+    R, I, S, B, U, J, IL, UNKNWN
 };
 
 enum RVC_Types {

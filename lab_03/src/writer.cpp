@@ -28,7 +28,7 @@ void writeByType(RV32_Types type, uint32_t cmd, std::ofstream& file, int line, c
             rv32_parsers::parse_B_type(cmd, file, line, mark);
             break;
         default:
-            file << "unknown type\n";
+            file << "unknown command\n";
     }
 }
 
@@ -67,7 +67,7 @@ void writeRVCbyType(RVC_Types type, uint16_t cmd, std::ofstream& file, int line,
             break;
         case UNKWN:
         default:
-            file << "unknown type of 16 bit cmd\n";
+            file << "unknown command\n";
             
     }
 }
