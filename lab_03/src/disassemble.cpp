@@ -3,11 +3,19 @@
 #include "disassemble.hpp"
 
 unsigned short shift(const Parcel parcel) {
-    if ((parcel & 0x3F) == 0x1F)
+    if ((parcel & 0x3F) == 0x1F) // 48-bit check
         return 2;
-    if ((parcel & 0x7F) == 0x3F)
+
+    auto tail = parcel & 0x7F;
+
+    if ((parcel & 0x7F) == 0x3F) // 64-bit check
         return 3;
-    std::cerr << "Command length is more than 64 bit\n";
+
+    auto sz = (parcel >> 12) & 0x7;
+    if (sz != 7)
+        return 4 + sz; // (80 + 16 * sz)-bit / 16 - 1
+
+    std::cerr << "Command length is >= 192 bit\n";
     exit(1);
 }
 
