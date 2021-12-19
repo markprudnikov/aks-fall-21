@@ -3,9 +3,7 @@
 
 #include "elf.hpp"
 #include "elf_parser.hpp"
-
-// objdump -s -j .text test_elf.o
-// readelf -x .text test_elf.o
+#include "disassemble.hpp"
 
 void check_arguments(int argc, char** argv, std::ifstream& input, std::ofstream& output) {
     if (argc < 3) {

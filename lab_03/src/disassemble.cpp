@@ -1,8 +1,21 @@
 #include <iostream>
 
 #include "disassemble.hpp"
+#include "writer.hpp"
 
-unsigned short shift(const Parcel parcel) {
+void disassemble(std::ifstream& src, std::ofstream& dst, const ElfHeader& elf_header) {
+    SectionHeaderArray sh_array = extractSectionHeaderArray(src, elf_header);
+    HeaderStringTable header_str_table = getHeaderStringTable(src, sh_array, elf_header.e_shstrndx);
+    TextSection text_section = extractTextSection(src, header_str_table, sh_array);
+    SymbolTable symbol_table = extractSymbolTable(src, header_str_table, sh_array);
+
+    int text_index = (int) elf_parsers::getSectionIndex(header_str_table, sh_array, TEXT_SECTION);
+    writeTextSection(dst, text_section, symbol_table, header_str_table.c_str(), text_index);
+
+    writeSymbolTable(dst, symbol_table, header_str_table.c_str());
+}
+
+int get_shift(const Parcel parcel) {
     if ((parcel & 0x3F) == 0x1F) // 48-bit check
         return 2;
 
@@ -14,7 +27,7 @@ unsigned short shift(const Parcel parcel) {
         return 4 + sz; // (80 + 16 * sz)-bit / 16 - 1
 
     std::cerr << "Command length is >= 192 bit\n";
-    exit(1);
+    return -1;
 }
 
 bool is32BitCmd(const Parcel parcel) {

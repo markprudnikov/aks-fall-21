@@ -90,7 +90,13 @@ void writeTextSection(std::ofstream& file, TextSection& text_sec, SymbolTable& s
             writeRVCbyType(q, cmd, file, line, mark.c_str());
             line += 2;
         } else {
-            i += shift(text_sec[i]);
+            int shift = get_shift(text_sec[i]);
+
+            if (shift == -1)
+                return;
+
+            i += shift;
+
             file << "unknown command\n";
         }
     }

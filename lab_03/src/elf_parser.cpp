@@ -14,20 +14,6 @@ ElfHeader extractElfHeader(std::ifstream& file) {
     return elf_header;
 }
 
-// TODO("to another disassembler file")
-void disassemble(std::ifstream& src, std::ofstream& dst, const ElfHeader& elf_header) {
-    SectionHeaderArray sh_array = extractSectionHeaderArray(src, elf_header);
-
-    HeaderStringTable header_str_table = getHeaderStringTable(src, sh_array, elf_header.e_shstrndx);
-
-    TextSection text_section = extractTextSection(src, header_str_table, sh_array);
-    SymbolTable symbol_table = extractSymbolTable(src, header_str_table, sh_array);
-
-    int text_index = (int) elf_parsers::getSectionIndex(header_str_table, sh_array, TEXT_SECTION);
-    writeTextSection(dst, text_section, symbol_table, header_str_table.c_str(), text_index);
-    writeSymbolTable(dst, symbol_table, header_str_table.c_str());
-}
-
 SectionHeaderArray extractSectionHeaderArray(std::ifstream& file, const ElfHeader& elf_header) {
     Elf32_Half sh_num = elf_header.e_shnum;
     Elf32_Half sh_size = elf_header.e_shentsize;
@@ -77,8 +63,7 @@ TextSection extractTextSection(std::ifstream& file, HeaderStringTable const& hdr
     return text_section;
 }
 
-SymbolTable
-extractSymbolTable(std::ifstream& file, HeaderStringTable const& hdr_str_table, SectionHeaderArray& sh_array) {
+SymbolTable extractSymbolTable(std::ifstream& file, HeaderStringTable const& hdr_str_table, SectionHeaderArray& sh_array) {
     SectionHeader sym_tab_header = elf_parsers::getSectionHeader(sh_array, hdr_str_table, SYMTAB_SECTION);
 
     Elf32_Word size = sym_tab_header.sh_size / sym_tab_header.sh_entsize;

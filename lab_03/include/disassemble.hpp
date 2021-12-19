@@ -2,6 +2,8 @@
 
 #include "elf_parser.hpp"
 
+void disassemble(std::ifstream& src, std::ofstream& dst, const ElfHeader& elf_header);
+
 // IL -- Type I, Load instructions
 enum RV32_Types {
     R, I, S, B, U, J, IL, UNKNWN
@@ -35,7 +37,7 @@ namespace rvc_parsers {
     void parse_CSS_type(uint16_t cmd, std::ofstream& file, int line, const char* mark);
 }
 
-unsigned short shift(Parcel parcel);
+int get_shift(Parcel parcel);
 
 bool is32BitCmd(Parcel parcel);
 

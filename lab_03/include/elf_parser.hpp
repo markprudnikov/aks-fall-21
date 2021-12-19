@@ -16,8 +16,6 @@ using SymbolTable = std::vector<Symbol>;
 using Parcel = uint16_t;
 using TextSection = std::vector<Parcel>;
 
-void disassemble(std::ifstream& src, std::ofstream& dst, ElfHeader const& elf_header);
-
 ElfHeader extractElfHeader(std::ifstream& file);
 
 SectionHeaderArray extractSectionHeaderArray(std::ifstream& file, const ElfHeader& elf_header);
